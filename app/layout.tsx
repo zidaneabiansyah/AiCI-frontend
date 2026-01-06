@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AiCI ShowCase",
-  description: "AiCI ShowCase - Portofolio Anak Anak Didik Artificial Intelligence Center Indonesia",
+  title: "AiCi ShowCase",
+  description: "AiCi ShowCase - Portofolio Anak Anak Didik Artificial Intelligence Center Indonesia",
 };
 
 export default function RootLayout({
