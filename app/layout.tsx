@@ -17,6 +17,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "AiCi ShowCase",
   description: "AiCi ShowCase - Portofolio Anak Anak Didik Artificial Intelligence Center Indonesia",
+  icons: {
+    icon: "/aici-logo-otak.png",
+  },
 };
 
 export default function RootLayout({

@@ -37,7 +37,7 @@ export default function ProjectsPage() {
             </section>
 
             {/* Filter & Search Section */}
-            <section className="py-12 bg-white sticky top-[80px] z-30 shadow-sm border-b border-gray-50">
+            <section className="py-12 bg-white border-b border-gray-50">
                 <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
                     {/* Categories */}
                     <div className="flex flex-wrap justify-center gap-3">

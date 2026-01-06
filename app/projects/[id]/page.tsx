@@ -126,7 +126,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                 <h3 className="text-xl font-bold relative z-10">Inspired by this project?</h3>
                                 <p className="text-white/70 text-sm relative z-10">Start your own journey in AI and Robotics today with our specialized courses.</p>
                                 <Link 
-                                    href="/programs" 
+                                    href="https://aici-umg.com/" 
                                     className="block w-full bg-white text-primary font-bold py-4 rounded-full text-center hover:bg-secondary hover:text-white transition-all relative z-10"
                                 >
                                     Join Our Program

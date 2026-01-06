@@ -12,7 +12,7 @@ const Footer = () => {
                     <div className="md:col-span-1 space-y-6">
                         <Image
                             src="/aici-logo.png"
-                            alt="AiCI Logo"
+                            alt="AiCi Logo"
                             width={200}
                             height={60}
                             className="h-14 w-auto grayscale hover:grayscale-0 transition-all cursor-pointer opacity-90 hover:opacity-100"
@@ -41,7 +41,7 @@ const Footer = () => {
                             <li><Link href="/" className="hover:text-primary transition-colors">Home</Link></li>
                             <li><Link href="/projects" className="hover:text-primary transition-colors">Projects</Link></li>
                             <li><Link href="/achievements" className="hover:text-primary transition-colors">Achievements</Link></li>
-                            <li><Link href="/programs" className="hover:text-primary transition-colors">Our Main Website</Link></li>
+                            <li><Link href="https://aici-umg.com/" className="hover:text-primary transition-colors">Our Main Website</Link></li>
                         </ul>
                     </div>
 
@@ -84,7 +84,7 @@ const Footer = () => {
                 </div>
 
                 <div className="pt-10 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6 text-primary/40 text-sm">
-                    <p>© 2026 Artificial Intelligence Center Indonesia (AiCI). All rights reserved.</p>
+                    <p>© 2026 Artificial Intelligence Center Indonesia (AiCi). All rights reserved.</p>
                     <div className="flex gap-8">
                         <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
                         <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>

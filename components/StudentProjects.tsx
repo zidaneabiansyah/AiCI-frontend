@@ -14,7 +14,7 @@ const StudentProjects = () => {
             <div className="max-w-7xl mx-auto text-center">
                 <h2 className="text-3xl md:text-4xl font-bold mb-6">Students Project</h2>
                 <p className="text-base md:text-lg text-white/70 max-w-3xl mx-auto mb-12 md:mb-16 px-4">
-                    Lembaga yang didirikan atas kerjasama FMIPA Universitas Indonesia dengan UMG IdeaLab Indonesia yang berfokus pada pengembangan sumber daya manusia dalam bidang artificial intelligence (kecerdasan artifisial).
+                    Kumpulan proyek inovatif hasil karya peserta didik AiCi yang menggabungkan kreativitas dengan teknologi kecerdasan artifisial dan robotika untuk solusi masa depan.
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-0">

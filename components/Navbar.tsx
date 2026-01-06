@@ -37,7 +37,7 @@ const Navbar = () => {
             <div className="flex-1 flex justify-start">
                 <Image
                     src="/aici-logo.png"
-                    alt="AiCI Logo"
+                    alt="AiCi Logo"
                     width={180}
                     height={60}
                     className="h-10 md:h-14 w-auto object-contain"
