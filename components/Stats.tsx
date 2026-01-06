@@ -39,15 +39,15 @@ const Stats = () => {
     ];
 
     return (
-        <section className="py-28 bg-white">
+        <section className="py-16 md:py-28 bg-white">
             <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
                 {stats.map((stat, index) => (
-                    <div key={index} className="space-y-3 group transition-transform hover:scale-105">
-                        <h2 className="text-6xl font-bold text-primary">
+                    <div key={index} className="space-y-2 md:space-y-3 group transition-transform hover:scale-105">
+                        <h2 className="text-4xl md:text-6xl font-bold text-primary">
                             <AnimatedNumber value={stat.value} />
                             <span>+</span>
                         </h2>
-                        <p className="text-xl text-primary/80 font-medium">{stat.label}</p>
+                        <p className="text-lg md:text-xl text-primary/80 font-medium">{stat.label}</p>
                     </div>
                 ))}
             </div>

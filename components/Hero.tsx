@@ -33,7 +33,7 @@ const Hero = () => {
     }, [slides.length]);
 
     return (
-        <section className="relative pt-40 pb-24 px-6 md:px-20 text-white overflow-hidden min-h-[85vh] flex items-center">
+        <section className="relative pt-32 md:pt-40 pb-16 md:pb-24 px-6 md:px-20 text-white overflow-hidden min-h-[90vh] md:min-h-[85vh] flex items-center">
             {/* Background Image with Overlay */}
             <div className="absolute inset-0 z-0">
                 <div className="absolute inset-0 bg-primary/85 z-10" />
@@ -43,32 +43,33 @@ const Hero = () => {
                     fill
                     className="object-cover"
                     priority
+                    sizes="100vw"
                 />
             </div>
 
-            <div className="relative z-20 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
+            <div className="relative z-20 max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 md:gap-16 w-full">
                 {/* Left Content */}
-                <div className="flex-1 space-y-10">
-                    <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-                        Artificial <br />
-                        Intelligence <br />
+                <div className="flex-1 space-y-6 md:space-y-10 text-center md:text-left">
+                    <h1 className="text-3xl md:text-6xl font-bold leading-tight">
+                        Artificial <br className="hidden md:block" />
+                        Intelligence <br className="hidden md:block" />
                         Center Indonesia
                     </h1>
-                    <p className="text-xl opacity-90 max-w-xl leading-relaxed">
+                    <p className="text-lg md:text-xl opacity-90 max-w-xl leading-relaxed mx-auto md:mx-0">
                         Lembaga yang didirikan atas kerjasama FMIPA Universitas Indonesia dengan UMG IdeaLab Indonesia yang berfokus pada pengembangan sumber daya manusia dalam bidang artificial intelligence (kecerdasan artifisial).
                     </p>
                     <Link
                         href="/achievements"
-                        className="inline-block bg-secondary text-white px-10 py-4 rounded-full font-bold text-lg hover:opacity-90 transition-all shadow-[0_10px_30px_rgba(255,77,48,0.4)] transform hover:scale-105 active:scale-95"
+                        className="inline-block bg-secondary text-white px-8 md:px-10 py-3 md:py-4 rounded-full font-bold text-base md:text-lg hover:opacity-90 transition-all shadow-[0_10px_30px_rgba(255,77,48,0.4)] transform hover:scale-105 active:scale-95"
                     >
                         Jelajahi Pencapaian
                     </Link>
                 </div>
 
                 {/* Right Card / Slider */}
-                <div className="flex-1 w-full max-w-2xl">
-                    <div className="bg-white/10 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/20 shadow-2xl transition-all duration-700 h-full">
-                        <div className="relative aspect-video rounded-3xl overflow-hidden bg-white/5 mb-8 border border-white/10">
+                <div className="flex-1 w-full max-w-2xl px-2 md:px-0">
+                    <div className="bg-white/10 backdrop-blur-xl rounded-4xl md:rounded-[2.5rem] p-6 md:p-8 border border-white/20 shadow-2xl transition-all duration-700 h-full">
+                        <div className="relative aspect-video rounded-2xl md:rounded-3xl overflow-hidden bg-white/5 mb-6 md:mb-8 border border-white/10">
                             {slides.map((slide, idx) => (
                                 <Image
                                     key={idx}
@@ -78,27 +79,28 @@ const Hero = () => {
                                     className={`object-cover transition-opacity duration-1000 ${
                                         idx === currentSlide ? "opacity-100" : "opacity-0"
                                     }`}
+                                    sizes="(max-width: 768px) 100vw, 50vw"
                                 />
                             ))}
                         </div>
-                        <div className="space-y-3 min-h-[120px]">
-                            <h3 className="text-2xl font-bold transition-all duration-700 translate-y-0 opacity-100">
+                        <div className="space-y-2 md:space-y-3 min-h-[100px] md:min-h-[120px]">
+                            <h3 className="text-xl md:text-2xl font-bold transition-all duration-700">
                                 {slides[currentSlide].title}
                             </h3>
-                            <p className="text-base opacity-80 leading-relaxed max-w-md">
+                            <p className="text-sm md:text-base opacity-80 leading-relaxed max-w-md mx-auto md:mx-0">
                                 {slides[currentSlide].desc}
                             </p>
                         </div>
                     </div>
 
                     {/* Slider Dots */}
-                    <div className="flex justify-center gap-3 mt-8">
+                    <div className="flex justify-center gap-2 md:gap-3 mt-6 md:mt-8">
                         {slides.map((_, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setCurrentSlide(idx)}
-                                className={`h-2.5 transition-all duration-500 rounded-full ${
-                                    idx === currentSlide ? "w-10 bg-white" : "w-2.5 bg-white/30"
+                                className={`h-2 md:h-2.5 transition-all duration-500 rounded-full ${
+                                    idx === currentSlide ? "w-8 md:w-10 bg-white" : "w-2 md:w-2.5 bg-white/30"
                                 }`}
                                 aria-label={`Go to slide ${idx + 1}`}
                             />
