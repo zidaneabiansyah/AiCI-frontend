@@ -3,20 +3,35 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Project } from "@/data/projects";
+import { BackendProject } from "@/lib/api";
 import LikeButton from "./LikeButton";
 
 interface ProjectCardProps {
-    project: Project;
+    project: Project | BackendProject;
 }
 
 const ProjectCard = ({ project }: ProjectCardProps) => {
+    // Helper to extract data regardless of source (Mock or Backend)
+    const isBackend = 'likes_count' in project;
+    const projectTitle = project.title;
+    const projectImage = (isBackend ? (project as BackendProject).thumbnail : (project as Project).image) || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1470&auto=format&fit=crop";
+    const projectCategory = isBackend ? (project as BackendProject).category_name : (project as Project).category;
+    const projectLikes = (project as any).likes_count ?? (project as any).likes ?? 0;
+    const projectDesc = isBackend ? (project as BackendProject).description : (project as Project).shortDescription;
+    const projectYear = isBackend ? new Date((project as BackendProject).created_at).getFullYear() : (project as Project).year;
+    
+    // Team member logic
+    const studentName = isBackend ? (project as BackendProject).student.full_name : "";
+    const mockTeam = !isBackend ? (project as Project).team : [];
+    const initials = (name: string) => name.split(' ').map(n => n[0]).join('');
+
     return (
         <div className="group bg-white rounded-4xl overflow-hidden border border-gray-100 transition-all duration-500 shadow-sm">
             <Link href={`/projects/${project.id}`}>
                 <div className="relative aspect-16/10 overflow-hidden">
                     <Image
-                        src={project.image}
-                        alt={project.title}
+                        src={projectImage}
+                        alt={projectTitle}
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -28,7 +43,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
                     </div>
                     <div className="absolute top-4 left-4">
                         <span className="bg-white/90 backdrop-blur-md text-primary text-xs font-bold px-4 py-2 rounded-full shadow-sm uppercase tracking-wider">
-                            {project.category}
+                            {projectCategory}
                         </span>
                     </div>
                 </div>
@@ -38,36 +53,45 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
                 <div className="flex justify-between items-start gap-4">
                     <Link href={`/projects/${project.id}`} className="flex-1">
                         <h3 className="text-xl md:text-2xl font-bold text-primary group-hover:text-secondary transition-colors leading-tight">
-                            {project.title}
+                            {projectTitle}
                         </h3>
                     </Link>
                     <div className="shrink-0">
-                        <LikeButton initialLikes={project.likes} projectId={project.id} />
+                        <LikeButton initialLikes={projectLikes} projectId={project.id} />
                     </div>
                 </div>
                 
                 <p className="text-primary/60 text-base line-clamp-2 leading-relaxed">
-                    {project.shortDescription}
+                    {projectDesc}
                 </p>
 
                 <div className="pt-4 flex items-center justify-between border-t border-gray-50">
                     <div className="flex -space-x-3">
-                        {project.team.slice(0, 3).map((member, i) => (
+                        {isBackend ? (
                             <div 
-                                key={i} 
                                 className="w-10 h-10 rounded-full border-2 border-white bg-primary/5 flex items-center justify-center text-xs font-bold text-primary"
-                                title={member}
+                                title={studentName}
                             >
-                                {member.split(' ').map(n => n[0]).join('')}
+                                {initials(studentName)}
                             </div>
-                        ))}
-                        {project.team.length > 3 && (
+                        ) : (
+                            mockTeam.slice(0, 3).map((member, i) => (
+                                <div 
+                                    key={i} 
+                                    className="w-10 h-10 rounded-full border-2 border-white bg-primary/5 flex items-center justify-center text-xs font-bold text-primary"
+                                    title={member}
+                                >
+                                    {initials(member)}
+                                </div>
+                            ))
+                        )}
+                        {!isBackend && mockTeam.length > 3 && (
                             <div className="w-10 h-10 rounded-full border-2 border-white bg-secondary text-white flex items-center justify-center text-xs font-bold">
-                                +{project.team.length - 3}
+                                +{mockTeam.length - 3}
                             </div>
                         )}
                     </div>
-                    <span className="text-sm font-bold text-primary/40 uppercase tracking-widest">{project.year}</span>
+                    <span className="text-sm font-bold text-primary/40 uppercase tracking-widest">{projectYear}</span>
                 </div>
             </div>
         </div>

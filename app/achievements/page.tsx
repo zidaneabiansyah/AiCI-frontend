@@ -6,13 +6,29 @@ import { AnimatePresence, motion } from "motion/react";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { achievements, Achievement } from "@/data/achievements";
 import BackToTop from "@/components/BackToTop";
+import { api, BackendAchievement } from "@/lib/api";
 
 export default function AchievementsPage() {
-    const [active, setActive] = useState<Achievement | null>(null);
+    const [achievements, setAchievements] = useState<BackendAchievement[]>([]);
+    const [active, setActive] = useState<BackendAchievement | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const ref = useRef<HTMLDivElement>(null!);
     const id = useId();
+
+    useEffect(() => {
+        const loadAchievements = async () => {
+            try {
+                const data = await api.achievements.list();
+                setAchievements(data.results);
+            } catch (error) {
+                console.error("Failed to fetch achievements:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadAchievements();
+    }, []);
 
     useEffect(() => {
         function onKeyDown(event: KeyboardEvent) {
@@ -93,7 +109,7 @@ export default function AchievementsPage() {
                                 >
                                     <motion.div layoutId={`image-${active.id}-${id}`} className="relative h-72 md:h-80 w-full">
                                         <Image
-                                            src={active.image}
+                                            src={active.image || "https://images.unsplash.com/photo-1560493676-04071c5f467b?q=80&w=2074&auto=format&fit=crop"}
                                             alt={active.title}
                                             fill
                                             className="object-cover"
@@ -161,7 +177,12 @@ export default function AchievementsPage() {
                     </AnimatePresence>
 
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-                        {achievements.map((achievement) => (
+                        {isLoading ? (
+                            [1, 2, 3, 4].map((n) => (
+                                <div key={n} className="bg-white rounded-[2.5rem] h-64 animate-pulse border border-gray-100 shadow-sm" />
+                            ))
+                        ) : (
+                            achievements.map((achievement) => (
                             <motion.div
                                 layoutId={`card-${achievement.id}-${id}`}
                                 key={achievement.id}
@@ -170,7 +191,7 @@ export default function AchievementsPage() {
                             >
                                 <motion.div layoutId={`image-${achievement.id}-${id}`} className="md:w-2/5 relative h-64 md:h-auto overflow-hidden">
                                     <Image
-                                        src={achievement.image}
+                                        src={achievement.image || "https://images.unsplash.com/photo-1560493676-04071c5f467b?q=80&w=2074&auto=format&fit=crop"}
                                         alt={achievement.title}
                                         fill
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -212,7 +233,8 @@ export default function AchievementsPage() {
                                     </div>
                                 </div>
                             </motion.div>
-                        ))}
+                        ))
+                        )}
                     </ul>
                 </div>
             </section>

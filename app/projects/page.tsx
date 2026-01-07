@@ -1,22 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
-import { projects } from "@/data/projects";
 import BackToTop from "@/components/BackToTop";
+import { api, BackendProject } from "@/lib/api";
 
 export default function ProjectsPage() {
+    const [projects, setProjects] = useState<BackendProject[]>([]);
+    const [categories, setCategories] = useState<string[]>(["All"]);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
+    const [isLoading, setIsLoading] = useState(true);
 
-    const categories = ["All", "Robotics", "Artificial Intelligence", "Smart City", "Internet of Things"];
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const [projectsData, categoriesData] = await Promise.all([
+                    api.projects.list(),
+                    api.projects.categories(),
+                ]);
+                setProjects(projectsData.results);
+                setCategories(["All", ...categoriesData.results.map((c: any) => c.name)]);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadData();
+    }, []);
 
     const filteredProjects = projects.filter((project) => {
         const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             project.description.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory = selectedCategory === "All" || project.category === selectedCategory;
+        const matchesCategory = selectedCategory === "All" || project.category_name === selectedCategory;
         return matchesSearch && matchesCategory;
     });
 
@@ -79,7 +98,13 @@ export default function ProjectsPage() {
             {/* Projects Grid */}
             <section className="py-20">
                 <div className="max-w-7xl mx-auto px-6">
-                    {filteredProjects.length > 0 ? (
+                    {isLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                            {[1, 2, 3].map((n) => (
+                                <div key={n} className="bg-white rounded-4xl h-96 animate-pulse border border-gray-100" />
+                            ))}
+                        </div>
+                    ) : filteredProjects.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                             {filteredProjects.map((project) => (
                                 <ProjectCard key={project.id} project={project} />

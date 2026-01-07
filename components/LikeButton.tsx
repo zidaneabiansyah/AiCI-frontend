@@ -9,21 +9,34 @@ interface LikeButtonProps {
     size?: "sm" | "lg";
 }
 
-const LikeButton = ({ initialLikes, onLike, size = "sm" }: LikeButtonProps) => {
+import { api } from "@/lib/api";
+
+const LikeButton = ({ initialLikes, projectId, onLike, size = "sm" }: LikeButtonProps) => {
     const [likes, setLikes] = useState(initialLikes);
     const [isLiked, setIsLiked] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleLike = (e: React.MouseEvent) => {
+    const handleLike = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         
-        const newIsLiked = !isLiked;
-        const newLikes = newIsLiked ? likes + 1 : likes - 1;
+        if (isLoading) return;
         
-        setIsLiked(newIsLiked);
-        setLikes(newLikes);
-        
-        if (onLike) onLike(newLikes);
+        setIsLoading(true);
+        try {
+            await api.interactions.like(projectId);
+            const newIsLiked = !isLiked;
+            const newLikes = newIsLiked ? likes + 1 : likes - 1;
+            
+            setIsLiked(newIsLiked);
+            setLikes(newLikes);
+            
+            if (onLike) onLike(newLikes);
+        } catch (error) {
+            console.error("Failed to like project:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
