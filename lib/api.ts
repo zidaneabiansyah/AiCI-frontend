@@ -50,9 +50,13 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
     const token = typeof window !== 'undefined' ? localStorage.getItem('aici_token') : null;
     
     const headers: HeadersInit = {
-        'Content-Type': 'application/json',
         ...options?.headers,
     };
+
+    // Only set Content-Type to JSON if body is not FormData
+    if (!(options?.body instanceof FormData)) {
+        (headers as any)['Content-Type'] = 'application/json';
+    }
 
     if (token) {
         (headers as any)['Authorization'] = `Bearer ${token}`;
@@ -68,6 +72,11 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
         throw new Error(error.message || 'API request failed');
     }
 
+    // Handle 204 No Content
+    if (res.status === 204) {
+        return {} as T;
+    }
+
     return res.json();
 }
 
@@ -77,9 +86,23 @@ export const api = {
         list: (params?: string) => fetcher<PaginatedResponse<BackendProject>>(`/showcase/projects/${params ? `?${params}` : ''}`),
         get: (id: string) => fetcher<BackendProject>(`/showcase/projects/${id}/`),
         categories: () => fetcher<PaginatedResponse<BackendCategory>>('/showcase/categories/'),
+        // Admin actions
+        listAll: (params?: string) => fetcher<PaginatedResponse<BackendProject>>(`/showcase/projects/${params ? `?${params}` : ''}`),
+        approve: (id: string) => fetcher<any>(`/showcase/projects/${id}/approve/`, { method: 'POST' }),
+        reject: (id: string) => fetcher<any>(`/showcase/projects/${id}/reject/`, { method: 'POST' }),
+        delete: (id: string) => fetcher<any>(`/showcase/projects/${id}/`, { method: 'DELETE' }),
     },
     achievements: {
         list: () => fetcher<PaginatedResponse<BackendAchievement>>('/achievements/'),
+        create: (data: FormData) => fetcher<BackendAchievement>('/achievements/', {
+            method: 'POST',
+            body: data,
+        }),
+        update: (id: string, data: FormData) => fetcher<BackendAchievement>(`/achievements/${id}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
+        delete: (id: string) => fetcher<any>(`/achievements/${id}/`, { method: 'DELETE' }),
     },
     interactions: {
         like: (projectId: string) => fetcher<any>('/interactions/likes/', {
