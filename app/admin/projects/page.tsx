@@ -11,6 +11,8 @@ export default function AdminProjectsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
     
     // Form state
     const [title, setTitle] = useState("");
@@ -62,6 +64,23 @@ export default function AdminProjectsPage() {
         }
     };
 
+    const openModal = (project?: BackendProject) => {
+        if (project) {
+            setIsEditing(true);
+            setEditingProjectId(project.id);
+            setTitle(project.title);
+            setDescription(project.description);
+            setCategory(project.category);
+            setStudentName(project.student?.full_name || project.student_name || "");
+            setDemoUrl(project.demo_url || "");
+            setVideoUrl(project.video_url || "");
+            setImagePreview(project.thumbnail);
+        } else {
+            resetForm();
+        }
+        setIsModalOpen(true);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const formData = new FormData();
@@ -74,7 +93,11 @@ export default function AdminProjectsPage() {
         if (imageFile) formData.append("thumbnail", imageFile);
 
         try {
-            await api.projects.create(formData);
+            if (isEditing && editingProjectId) {
+                await api.projects.update(editingProjectId, formData);
+            } else {
+                await api.projects.create(formData);
+            }
             setIsModalOpen(false);
             resetForm();
             loadData();
@@ -84,6 +107,8 @@ export default function AdminProjectsPage() {
     };
 
     const resetForm = () => {
+        setIsEditing(false);
+        setEditingProjectId(null);
         setTitle("");
         setDescription("");
         setCategory("");
@@ -114,7 +139,7 @@ export default function AdminProjectsPage() {
             <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold text-primary">Submissions Management</h3>
                 <button 
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => openModal()}
                     className="bg-primary text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-primary/20 hover:bg-secondary transition-all flex items-center gap-2"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,6 +217,15 @@ export default function AdminProjectsPage() {
                                     <td className="px-10 py-6 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button 
+                                                onClick={() => openModal(project)}
+                                                className="w-10 h-10 bg-gray-50 text-primary/40 rounded-xl flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-sm"
+                                                title="Edit"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <button 
                                                 onClick={() => handleAction(project.id, 'delete')}
                                                 className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
                                                 title="Delete"
@@ -217,7 +251,7 @@ export default function AdminProjectsPage() {
                         
                         <div className="relative bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl p-10 md:p-12 animate-in fade-in zoom-in duration-300">
                             <div className="flex justify-between items-center mb-10">
-                                <h3 className="text-2xl font-bold text-primary">Add New Project</h3>
+                                <h3 className="text-2xl font-bold text-primary">{isEditing ? 'Edit Project' : 'Add New Project'}</h3>
                                 <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-primary/20 hover:text-red-500 hover:bg-red-50 transition-all">
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -347,7 +381,7 @@ export default function AdminProjectsPage() {
                                         type="submit"
                                         className="flex-1 bg-primary text-white font-bold py-5 rounded-2xl shadow-xl shadow-primary/20 hover:bg-secondary transition-all uppercase tracking-widest text-xs"
                                     >
-                                        Create Project
+                                        {isEditing ? 'Save Changes' : 'Create Project'}
                                     </button>
                                 </div>
                             </form>

@@ -104,6 +104,10 @@ export const api = {
             method: 'POST',
             body: data,
         }),
+        update: (id: string, data: FormData) => fetcher<BackendProject>(`/showcase/projects/${id}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
     },
     users: {
         listStudents: (params?: string) => fetcher<PaginatedResponse<BackendStudent>>(`/users/students/${params ? `?${params}` : ''}`),
