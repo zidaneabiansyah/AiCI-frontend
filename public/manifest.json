@@ -1,0 +1,23 @@
+{
+    "name": "AiCi Showcase",
+    "short_name": "AiCi",
+    "description": "Showcase of innovative student projects from AiCi Robotics & AI.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#255D74",
+    "icons": [
+        {
+            "src": "/aici-logo-otak.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/aici-logo-otak.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

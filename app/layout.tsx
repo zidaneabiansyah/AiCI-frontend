@@ -20,7 +20,11 @@ export const metadata: Metadata = {
   icons: {
     icon: "/aici-logo-otak.png",
   },
+  manifest: "/manifest.json",
+  themeColor: "#255D74",
 };
+
+import PWARegistration from "@/components/PWARegistration";
 
 export default function RootLayout({
   children,
@@ -32,6 +36,7 @@ export default function RootLayout({
       <body
         className={`${comfortaa.variable} ${inter.variable} antialiased`}
       >
+        <PWARegistration />
         {children}
       </body>
     </html>

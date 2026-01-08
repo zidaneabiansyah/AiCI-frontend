@@ -1,21 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const Programs = () => {
     const programs = [
         {
             title: "Fun Learning with AI",
-            image: "/program-1.png", // Need to use a placeholder or provided images if any
+            lottie: "/child robot.json",
         },
         {
             title: "Extracurricular AI and Robotic Club",
-            image: "/program-2.png",
+            lottie: "/ai Robot analysis.json",
         },
         {
             title: "AI for Education",
-            image: "/program-3.png",
+            lottie: "/Man and robot with computers sitting together in workplace.json",
         },
     ];
 
@@ -40,13 +40,17 @@ const Programs = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 md:mb-16 px-4 md:px-0">
                     {programs.map((program, index) => (
                         <div key={index} className="group cursor-pointer">
-                            <div className="relative aspect-4/3 rounded-3xl overflow-hidden shadow-lg mb-4 md:mb-6 transition-transform group-hover:scale-105">
-                                {/* Placeholder Image */}
-                                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                    <p className="text-primary/40 font-bold uppercase tracking-widest text-sm px-4">{program.title}</p>
+                            <div className="relative aspect-4/3 rounded-3xl overflow-hidden bg-primary/5 shadow-sm mb-4 md:mb-6 transition-all duration-500 group-hover:scale-105 group-hover:shadow-xl group-hover:shadow-primary/5">
+                                <div className="absolute inset-0 flex items-center justify-center p-8">
+                                    <DotLottieReact
+                                        src={program.lottie}
+                                        loop
+                                        autoplay
+                                        className="w-full h-full"
+                                    />
                                 </div>
                             </div>
-                            <h3 className="text-lg md:text-xl font-bold text-primary px-4">
+                            <h3 className="text-lg md:text-xl font-bold text-primary px-4 group-hover:text-secondary transition-colors">
                                 {program.title}
                             </h3>
                         </div>
