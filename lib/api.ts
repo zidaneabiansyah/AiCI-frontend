@@ -37,6 +37,67 @@ export interface BackendAchievement {
     link?: string;
 }
 
+// Content Types
+export interface BackendTestimonial {
+    id: string;
+    name: string;
+    role: string;
+    quote: string;
+    photo: string | null;
+    order: number;
+}
+
+export interface BackendPartner {
+    id: string;
+    name: string;
+    logo: string;
+    website_url: string | null;
+    order: number;
+}
+
+export interface BackendFacility {
+    id: string;
+    category: 'RUANGAN' | 'MODUL' | 'MEDIA_KIT' | 'ROBOT';
+    category_display: string;
+    title: string;
+    description: string;
+    image: string;
+    order: number;
+}
+
+export interface BackendTeamMember {
+    id: string;
+    name: string;
+    position: string;
+    role_type: 'OPERASIONAL' | 'TUTOR';
+    role_type_display: string;
+    photo: string;
+    order: number;
+}
+
+export interface BackendGalleryImage {
+    id: string;
+    title: string;
+    image: string;
+    category: string;
+    category_display: string;
+    description: string;
+    date_taken: string | null;
+    is_featured: boolean;
+}
+
+export interface BackendArticle {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content?: string;
+    thumbnail: string;
+    author: string;
+    published_at: string | null;
+    created_at: string;
+}
+
 export interface PaginatedResponse<T> {
     count: number;
     next: string | null;
@@ -50,6 +111,12 @@ const PUBLIC_ENDPOINTS = [
     '/showcase/projects/',
     '/showcase/categories/',
     '/achievements/',
+    '/content/testimonials/',
+    '/content/partners/',
+    '/content/facilities/',
+    '/content/team/',
+    '/content/gallery/',
+    '/content/articles/',
 ];
 
 function isPublicEndpoint(endpoint: string): boolean {
@@ -216,5 +283,20 @@ export const api = {
             body: JSON.stringify(credentials),
         }),
         me: () => fetcher<any>('/users/me/'),
+    },
+    content: {
+        testimonials: () => fetcher<PaginatedResponse<BackendTestimonial>>('/content/testimonials/'),
+        partners: () => fetcher<PaginatedResponse<BackendPartner>>('/content/partners/'),
+        facilities: (category?: string) => fetcher<PaginatedResponse<BackendFacility>>(`/content/facilities/${category ? `?category=${category}` : ''}`),
+        team: (roleType?: string) => fetcher<PaginatedResponse<BackendTeamMember>>(`/content/team/${roleType ? `?role_type=${roleType}` : ''}`),
+        gallery: (params?: string) => fetcher<PaginatedResponse<BackendGalleryImage>>(`/content/gallery/${params ? `?${params}` : ''}`),
+        featuredGallery: () => fetcher<PaginatedResponse<BackendGalleryImage>>('/content/gallery/?is_featured=true'),
+        articles: (params?: string) => fetcher<PaginatedResponse<BackendArticle>>(`/content/articles/${params ? `?${params}` : ''}`),
+        articleBySlug: (slug: string) => fetcher<BackendArticle>(`/content/articles/${slug}/`),
+        sendContact: (data: { name: string; email: string; phone?: string; subject: string; message: string }) =>
+            fetcher<any>('/content/contact/', {
+                method: 'POST',
+                body: JSON.stringify(data),
+            }),
     },
 };
