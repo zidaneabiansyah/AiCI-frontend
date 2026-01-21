@@ -285,14 +285,81 @@ export const api = {
         me: () => fetcher<any>('/users/me/'),
     },
     content: {
+        // Testimonials
         testimonials: () => fetcher<PaginatedResponse<BackendTestimonial>>('/content/testimonials/'),
+        createTestimonial: (data: FormData) => fetcher<BackendTestimonial>('/content/testimonials/', {
+            method: 'POST',
+            body: data,
+        }),
+        updateTestimonial: (id: string, data: FormData) => fetcher<BackendTestimonial>(`/content/testimonials/${id}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
+        deleteTestimonial: (id: string) => fetcher<any>(`/content/testimonials/${id}/`, { method: 'DELETE' }),
+        
+        // Partners
         partners: () => fetcher<PaginatedResponse<BackendPartner>>('/content/partners/'),
+        createPartner: (data: FormData) => fetcher<BackendPartner>('/content/partners/', {
+            method: 'POST',
+            body: data,
+        }),
+        updatePartner: (id: string, data: FormData) => fetcher<BackendPartner>(`/content/partners/${id}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
+        deletePartner: (id: string) => fetcher<any>(`/content/partners/${id}/`, { method: 'DELETE' }),
+        
+        // Facilities
         facilities: (category?: string) => fetcher<PaginatedResponse<BackendFacility>>(`/content/facilities/${category ? `?category=${category}` : ''}`),
+        createFacility: (data: FormData) => fetcher<BackendFacility>('/content/facilities/', {
+            method: 'POST',
+            body: data,
+        }),
+        updateFacility: (id: string, data: FormData) => fetcher<BackendFacility>(`/content/facilities/${id}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
+        deleteFacility: (id: string) => fetcher<any>(`/content/facilities/${id}/`, { method: 'DELETE' }),
+        
+        // Team
         team: (roleType?: string) => fetcher<PaginatedResponse<BackendTeamMember>>(`/content/team/${roleType ? `?role_type=${roleType}` : ''}`),
+        createTeamMember: (data: FormData) => fetcher<BackendTeamMember>('/content/team/', {
+            method: 'POST',
+            body: data,
+        }),
+        updateTeamMember: (id: string, data: FormData) => fetcher<BackendTeamMember>(`/content/team/${id}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
+        deleteTeamMember: (id: string) => fetcher<any>(`/content/team/${id}/`, { method: 'DELETE' }),
+        
+        // Gallery
         gallery: (params?: string) => fetcher<PaginatedResponse<BackendGalleryImage>>(`/content/gallery/${params ? `?${params}` : ''}`),
         featuredGallery: () => fetcher<PaginatedResponse<BackendGalleryImage>>('/content/gallery/?is_featured=true'),
+        createGalleryImage: (data: FormData) => fetcher<BackendGalleryImage>('/content/gallery/', {
+            method: 'POST',
+            body: data,
+        }),
+        updateGalleryImage: (id: string, data: FormData) => fetcher<BackendGalleryImage>(`/content/gallery/${id}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
+        deleteGalleryImage: (id: string) => fetcher<any>(`/content/gallery/${id}/`, { method: 'DELETE' }),
+        
+        // Articles
         articles: (params?: string) => fetcher<PaginatedResponse<BackendArticle>>(`/content/articles/${params ? `?${params}` : ''}`),
         articleBySlug: (slug: string) => fetcher<BackendArticle>(`/content/articles/${slug}/`),
+        createArticle: (data: FormData) => fetcher<BackendArticle>('/content/articles/', {
+            method: 'POST',
+            body: data,
+        }),
+        updateArticle: (slug: string, data: FormData) => fetcher<BackendArticle>(`/content/articles/${slug}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
+        deleteArticle: (slug: string) => fetcher<any>(`/content/articles/${slug}/`, { method: 'DELETE' }),
+        
+        // Contact
         sendContact: (data: { name: string; email: string; phone?: string; subject: string; message: string }) =>
             fetcher<any>('/content/contact/', {
                 method: 'POST',
