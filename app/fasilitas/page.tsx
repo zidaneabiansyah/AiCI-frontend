@@ -4,6 +4,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { api, BackendFacility } from "@/lib/api";
 
 /**
  * Fasilitas Page
@@ -17,40 +19,34 @@ import Link from "next/link";
  * Layout: alternating image left/right
  */
 
-const facilities = [
-    {
-        category: "RUANGAN",
-        title: "Nyaman dalam Lingkungan Universitas Indonesia",
-        description: "Fasilitas ruangan yang nyaman dan kondusif untuk pembelajaran. Terletak di lingkungan kampus Universitas Indonesia yang asri dan mendukung proses belajar mengajar dengan optimal. Ruangan dilengkapi dengan AC, proyektor, papan tulis, dan tempat duduk yang nyaman.",
-        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800",
-        imagePosition: "left",
-    },
-    {
-        category: "MODUL",
-        title: "Berlandaskan STEAM",
-        description: "Modul pembelajaran yang komprehensif berbasis STEAM (Science, Technology, Engineering, Arts, Mathematics). Kurikulum dirancang oleh tim ahli dari Universitas Indonesia untuk memastikan peserta didik mendapatkan pemahaman yang mendalam tentang AI dan Robotika.",
-        image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=800",
-        imagePosition: "right",
-    },
-    {
-        category: "MEDIA KIT",
-        title: "Tersedia Lengkap",
-        description: "Peralatan dan media pembelajaran yang lengkap untuk mendukung praktik langsung. Setiap peserta didik akan mendapatkan akses ke berbagai peralatan dan software yang dibutuhkan untuk belajar coding, programming, dan pengembangan AI.",
-        image: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=800",
-        imagePosition: "left",
-    },
-    {
-        category: "ROBOT",
-        title: "Pengalaman Belajar dengan Robot yang Dilengkapi AI",
-        description: "Belajar langsung dengan berbagai jenis robot yang dilengkapi dengan teknologi AI terkini. Peserta didik dapat berinteraksi, memprogram, dan mengembangkan robot mereka sendiri dengan bimbingan tutor berpengalaman dari Universitas Indonesia.",
-        image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=800",
-        imagePosition: "right",
-    },
+const categoryTabs = [
+    { key: "RUANGAN", label: "RUANGAN" },
+    { key: "MODUL", label: "MODUL" },
+    { key: "MEDIA_KIT", label: "MEDIA KIT" },
+    { key: "ROBOT", label: "ROBOT" },
 ];
 
-const categoryTabs = ["RUANGAN", "MODUL", "MEDIA KIT", "ROBOT"];
-
 export default function FasilitasPage() {
+    const [facilities, setFacilities] = useState<BackendFacility[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFacilities = async () => {
+            try {
+                const res = await api.content.facilities();
+                setFacilities(res.results);
+            } catch (err) {
+                console.error("Failed to fetch facilities", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchFacilities();
+    }, []);
+
+    // Sort/Group facilities if needed, or just display as list sorted by order (default from backend)
+    // We assume backend returns them in correct order.
+
     return (
         <main className="min-h-screen">
             <Navbar />
@@ -107,11 +103,11 @@ export default function FasilitasPage() {
                         <div className="flex flex-wrap gap-2 md:gap-4 justify-between items-center">
                             {categoryTabs.map((tab) => (
                                 <a
-                                    key={tab}
-                                    href={`#${tab.toLowerCase().replace(' ', '-')}`}
+                                    key={tab.key}
+                                    href={`#${tab.key.toLowerCase().replace('_', '-')}`}
                                     className="flex-1 text-center px-4 py-3 rounded-full bg-[#f5b634] text-white text-xs md:text-sm font-bold tracking-wider hover:bg-[#dba023] transition-all shadow-sm whitespace-nowrap"
                                 >
-                                    {tab}
+                                    {tab.label}
                                 </a>
                             ))}
                         </div>
@@ -122,39 +118,49 @@ export default function FasilitasPage() {
             {/* Facilities List */}
             <section id="facilities" className="py-16 bg-white">
                 <div className="max-w-7xl mx-auto px-6">
-                    {facilities.map((facility, index) => (
-                        <div
-                            key={facility.category}
-                            id={facility.category.toLowerCase().replace(' ', '-')}
-                            className={`flex flex-col ${facility.imagePosition === 'left' ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 lg:gap-16 p-8 lg:p-12 mb-8 border-4 border-primary/20 rounded-3xl bg-gray-50/30`}
-                        >
-                            {/* Image */}
-                            <div className="lg:w-1/2">
-                                <div className="relative aspect-video rounded-2xl overflow-hidden shadow-lg">
-                                    <Image
-                                        src={facility.image}
-                                        alt={facility.title}
-                                        fill
-                                        className="object-cover"
-                                        sizes="50vw"
-                                    />
+                    {loading ? (
+                         <div className="flex justify-center h-40 items-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        </div>
+                    ) : facilities.length === 0 ? (
+                        <div className="text-center py-20 text-gray-400">
+                            <p>Belum ada data fasilitas.</p>
+                        </div>
+                    ) : (
+                        facilities.map((facility, index) => (
+                            <div
+                                key={facility.id}
+                                id={facility.category.toLowerCase().replace('_', '-')}
+                                className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 lg:gap-16 p-8 lg:p-12 mb-8 border-4 border-primary/20 rounded-3xl bg-gray-50/30`}
+                            >
+                                {/* Image */}
+                                <div className="lg:w-1/2">
+                                    <div className="relative aspect-video rounded-2xl overflow-hidden shadow-lg">
+                                        <Image
+                                            src={facility.image || '/placeholder-image.jpg'}
+                                            alt={facility.title}
+                                            fill
+                                            className="object-cover"
+                                            sizes="50vw"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Content */}
+                                <div className="lg:w-1/2 flex flex-col justify-center">
+                                    <span className="text-secondary text-sm font-bold uppercase tracking-wider mb-2">
+                                        {facility.category_display || facility.category}
+                                    </span>
+                                    <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
+                                        {facility.title}
+                                    </h2>
+                                    <p className="text-primary/70 leading-relaxed">
+                                        {facility.description}
+                                    </p>
                                 </div>
                             </div>
-
-                            {/* Content */}
-                            <div className="lg:w-1/2 flex flex-col justify-center">
-                                <span className="text-secondary text-sm font-bold uppercase tracking-wider mb-2">
-                                    {facility.category}
-                                </span>
-                                <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                                    {facility.title}
-                                </h2>
-                                <p className="text-primary/70 leading-relaxed">
-                                    {facility.description}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             </section>
 

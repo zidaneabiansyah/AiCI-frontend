@@ -51,6 +51,14 @@ export default function ArtikelDetailPage() {
         });
     };
 
+    const [shareUrl, setShareUrl] = useState("");
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            setShareUrl(window.location.href);
+        }
+    }, []);
+
     if (loading) {
         return (
             <main className="min-h-screen">
@@ -123,7 +131,7 @@ export default function ArtikelDetailPage() {
             <div className="max-w-5xl mx-auto px-6 -mt-4">
                 <div className="relative aspect-video rounded-2xl overflow-hidden shadow-xl">
                     <Image
-                        src={article.thumbnail}
+                        src={article.thumbnail || '/placeholder-image.jpg'}
                         alt={article.title}
                         fill
                         className="object-cover"
@@ -156,7 +164,7 @@ export default function ArtikelDetailPage() {
                         <p className="text-primary/40 text-sm mb-4">Bagikan artikel ini:</p>
                         <div className="flex gap-3">
                             <a
-                                href={`https://wa.me/?text=${encodeURIComponent(article.title + ' - ' + window?.location?.href)}`}
+                                href={`https://wa.me/?text=${encodeURIComponent(article.title + ' - ' + shareUrl)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white hover:opacity-90 transition-all"
@@ -166,7 +174,7 @@ export default function ArtikelDetailPage() {
                                 </svg>
                             </a>
                             <a
-                                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(window?.location?.href || '')}`}
+                                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(shareUrl)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:opacity-90 transition-all"
@@ -177,7 +185,7 @@ export default function ArtikelDetailPage() {
                             </a>
                             <button
                                 onClick={() => {
-                                    navigator.clipboard.writeText(window?.location?.href || '');
+                                    navigator.clipboard.writeText(shareUrl);
                                     alert('Link berhasil disalin!');
                                 }}
                                 className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-primary hover:bg-gray-300 transition-all"

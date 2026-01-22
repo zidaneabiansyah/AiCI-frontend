@@ -1,33 +1,43 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { LogoLoop } from "./LogoLoop";
+import { api, BackendPartner } from "@/lib/api";
 
 /**
  * Partners Component
  * 
  * Menampilkan logo partner/sekolah yang bekerjasama dengan AiCi.
- * Sekarang menggunakan LogoLoop untuk animasi kontinu.
+ * Data diambil dari API /content/partners/
  */
 
-const partnerLogos = [
-    { src: "/icon/bahasa-kita.png", alt: "Bahasa Kita" },
-    { src: "/icon/emliku.png", alt: "Emliku" },
-    { src: "/icon/helber.png", alt: "Helber" },
-    { src: "/icon/jari-visibility.png", alt: "Jari Visibility" },
-    { src: "/icon/nusa-aksara.png", alt: "Nusa Aksara" },
-    { src: "/icon/prime-skill.png", alt: "Prime Skill" },
-    { src: "/icon/tunas-muda.png", alt: "Tunas Muda" },
-    { src: "/icon/ubtech.png", alt: "Ubtech" },
-    { src: "/icon/imajin.png", alt: "Imajin" },
-    { src: "/icon/star-chain.png", alt: "Star Chain" },
-    { src: "/icon/widya.png", alt: "Widya" },
-    { src: "/icon/uin.png", alt: "Uin" },
-    { src: "/icon/pgri.png", alt: "Pgri" },
-    { src: "/icon/kominfo.png", alt: "Kominfo" },
-    { src: "/icon/tut-wuri-handayani.png", alt: "Tut Wuri Handayani" },
-];
-
 const Partners = () => {
+    const [partners, setPartners] = useState<BackendPartner[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPartners = async () => {
+            try {
+                const res = await api.content.partners();
+                setPartners(res.results);
+            } catch (err) {
+                console.error("Failed to fetch partners", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPartners();
+    }, []);
+
+    if (loading || partners.length === 0) {
+        return null;
+    }
+
+    const partnerLogos = partners.map(p => ({
+        src: p.logo,
+        alt: p.name
+    }));
+
     return (
         <section className="py-20 bg-white border-t border-gray-50 overflow-hidden">
             {/* Title Container */}

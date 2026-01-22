@@ -1,50 +1,42 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { api, BackendTestimonial } from "@/lib/api";
 
 /**
  * Testimonials Component
  * 
  * Menampilkan testimoni dari siswa AiCi.
- * Data testimoni yang sudah disediakan:
- * 1. Kahfi - Siswa SD - "Cool!"
- * 2. Sachio - Siswa SMP - "Hi Tech, robots and AI are our future..."
- * 3. Aulia - Siswa SMA - "The problem is that the world in the future..."
- * 4. Sandhya - Siswa SD - "Cool, That's Clever!"
- * 
- * PANDUAN:
- * - Nanti bisa diganti dengan data dari API /content/testimonials/
- * - Ganti placeholder foto dengan foto asli siswa
+ * Data diambil dari API /content/testimonials/
  */
 
-const testimonials = [
-    {
-        name: "Kahfi",
-        role: "Siswa SD",
-        quote: "Cool!",
-        photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400",
-    },
-    {
-        name: "Sachio",
-        role: "Siswa SMP",
-        quote: "Hi Tech, robots and AI are our future, because now technology is increasingly being used",
-        photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400",
-    },
-    {
-        name: "Aulia",
-        role: "Siswa SMA",
-        quote: "The problem is that the world in the future will also be more sophisticated than now, there will definitely be many more",
-        photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400",
-    },
-    {
-        name: "Sandhya",
-        role: "Siswa SD",
-        quote: "Cool, That's Clever!",
-        photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=400",
-    },
-];
-
 const Testimonials = () => {
+    const [testimonials, setTestimonials] = useState<BackendTestimonial[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTestimonials = async () => {
+            try {
+                const res = await api.content.testimonials();
+                setTestimonials(res.results);
+            } catch (err) {
+                console.error("Failed to fetch testimonials", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTestimonials();
+    }, []);
+
+    if (loading) {
+        return <div className="py-24 text-center">Loading testimonials...</div>;
+    }
+
+    if (testimonials.length === 0) {
+        return null; // Hide section if no testimonials
+    }
+
     return (
         <section className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-6">
@@ -60,16 +52,16 @@ const Testimonials = () => {
 
                 {/* Testimonials Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-24">
-                    {testimonials.map((testimonial, index) => (
+                    {testimonials.map((testimonial) => (
                         <div
-                            key={index}
+                            key={testimonial.id}
                             className="flex flex-col items-center group hover:-translate-y-2 hover:shadow-2xl hover:bg-white rounded-3xl p-6 transition-all duration-300"
                         >
                             {/* Photo Container with bottom curve */}
                             <div className="relative w-full max-w-[400px] aspect-square mb-6">
                                 <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden">
                                     <Image
-                                        src={testimonial.photo}
+                                        src={testimonial.photo || '/placeholder-image.jpg'}
                                         alt={testimonial.name}
                                         fill
                                         className="object-cover"
