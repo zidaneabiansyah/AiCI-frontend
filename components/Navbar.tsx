@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import GoogleTranslate from "./GoogleTranslate";
 
 /**
  * Navbar Component
@@ -129,10 +130,7 @@ const Navbar = () => {
 
                 {/* Translate Button */}
                 <div className="hidden lg:block relative group">
-                    <button className="bg-[#006080] text-white px-5 py-2 text-[13px] font-bold flex items-center gap-2 rounded-sm shadow-sm hover:opacity-90 transition-all">
-                        Translate »
-                    </button>
-                    {/* Placeholder for menu if needed */}
+                    <GoogleTranslate />
                 </div>
 
                 {/* Mobile Menu Button */}
