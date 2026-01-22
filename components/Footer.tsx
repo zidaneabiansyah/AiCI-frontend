@@ -35,8 +35,8 @@ const Footer = () => {
     ];
 
     const socialLinks = [
-        { href: "https://instagram.com/aici.official", icon: "instagram", label: "Instagram" },
-        { href: "https://linkedin.com/company/aici-indonesia", icon: "linkedin", label: "LinkedIn" },
+        { href: "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.instagram.com/aici.official/%3Fhl%3Den", icon: "instagram", label: "Instagram" },
+        { href: "https://www.linkedin.com/company/artificial-intelligence-center-indonesia/?originalSubdomain=id", icon: "linkedin", label: "LinkedIn" },
         { href: "mailto:info@aici-aii.com", icon: "email", label: "Email" },
         { href: "https://wa.me/6282110103938", icon: "whatsapp", label: "WhatsApp" },
         { href: "tel:+6282110103938", icon: "phone", label: "Phone" },
