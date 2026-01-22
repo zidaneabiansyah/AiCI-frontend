@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "AiCI - Artificial Intelligence Center Indonesia",
   description: "Artificial Intelligence Center Indonesia Gd. Laboratorium Riset Multidisiplin Pertamina FMIPA UI Lt. 4, Universitas Indonesia.",
   icons: {
-    icon: "/aici-logo-otak.png",
+    icon: "/icon/aici-logo-otak.png",
   },
   manifest: "/manifest.json",
 };

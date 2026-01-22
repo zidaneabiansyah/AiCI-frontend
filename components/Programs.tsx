@@ -25,7 +25,7 @@ const Programs = () => {
             <div
                 className="absolute inset-0 opacity-10 pointer-events-none"
                 style={{
-                    backgroundImage: `url('/aici-logo-otak.png')`,
+                    backgroundImage: `url('/icon/aici-logo-otak.png')`,
                     backgroundSize: '150px md:200px',
                     backgroundRepeat: 'repeat',
                 }}

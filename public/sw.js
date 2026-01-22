@@ -2,8 +2,8 @@ const CACHE_NAME = 'aici-showcase-v1';
 const ASSETS_TO_CACHE = [
     '/',
     '/manifest.json',
-    '/aici-logo.png',
-    '/aici-logo-otak.png'
+    '/icon/aici-logo.png',
+    '/icon/aici-logo-otak.png'
 ];
 
 // Install Event

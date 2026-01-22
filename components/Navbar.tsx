@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 /**
  * Navbar Component
@@ -30,6 +31,7 @@ const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
+    const pathname = usePathname();
 
     useEffect(() => {
         const controlNavbar = () => {
@@ -55,7 +57,7 @@ const Navbar = () => {
                 {/* Logo */}
                 <Link href="/" className="shrink-0">
                     <Image
-                        src="/aici-logo.png"
+                        src="/icon/aici-logo.png"
                         alt="AiCi Logo"
                         width={220}
                         height={80}
@@ -69,7 +71,11 @@ const Navbar = () => {
                         <Link
                             key={link.href}
                             href={link.href}
-                            className="text-primary font-bold hover:text-secondary transition-colors text-[13px] tracking-wide flex items-center gap-1 uppercase"
+                            className={`${
+                                (pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href)))
+                                    ? 'text-secondary' 
+                                    : 'text-primary'
+                            } font-bold hover:text-secondary transition-colors text-[13px] tracking-wide flex items-center gap-1 uppercase`}
                         >
                             {link.label}
                             {link.label === "Artikel" && (
@@ -116,7 +122,11 @@ const Navbar = () => {
                                 key={link.href}
                                 href={link.href}
                                 onClick={() => setIsOpen(false)}
-                                className="text-primary font-bold text-base py-2 border-b border-gray-50 last:border-0 uppercase"
+                                className={`${
+                                    (pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href)))
+                                        ? 'text-secondary' 
+                                        : 'text-primary'
+                                } font-bold text-base py-2 border-b border-gray-50 last:border-0 uppercase`}
                             >
                                 {link.label}
                             </Link>

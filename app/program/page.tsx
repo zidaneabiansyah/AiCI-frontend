@@ -167,7 +167,7 @@ export default function ProgramPage() {
                                         href={`/program/${program.id}`}
                                         className="inline-block bg-[#0B6282] text-white px-8 py-3 rounded-full font-bold text-xs tracking-widest uppercase hover:bg-[#094d66] transition-all shadow-lg"
                                     >
-                                        PELAJARI PROGRAM
+                                        UNDUH BROSUR
                                     </Link>
                                 </div>
                             </div>

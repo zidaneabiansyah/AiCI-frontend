@@ -50,7 +50,7 @@ const Footer = () => {
                     {/* Column 1: Logo & Address */}
                     <div className="space-y-6">
                         <Image
-                            src="/Logo-Aici-White-Landscape.png"
+                            src="/icon/Logo-Aici-White-Landscape.png"
                             alt="AiCi Logo"
                             width={240}
                             height={80}
