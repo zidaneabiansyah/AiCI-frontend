@@ -150,14 +150,10 @@ export default function ArtikelDetailPage() {
                     </p>
                     
                     {/* Content */}
-                    <div className="prose prose-lg max-w-none prose-headings:text-primary prose-p:text-primary/70 prose-a:text-secondary">
-                        {/* Render content - for now just as text, later can use markdown parser */}
-                        {article.content?.split('\n\n').map((paragraph, index) => (
-                            <p key={index} className="mb-4 text-primary/70 leading-relaxed">
-                                {paragraph}
-                            </p>
-                        ))}
-                    </div>
+                    <div 
+                        className="prose prose-lg max-w-none prose-headings:text-primary prose-p:text-primary/70 prose-a:text-secondary"
+                        dangerouslySetInnerHTML={{ __html: article.content || "" }}
+                    />
                     
                     {/* Share Section */}
                     <div className="mt-12 pt-8 border-t border-gray-100">

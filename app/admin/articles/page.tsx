@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { api, BackendArticle } from "@/lib/api";
 import Image from "next/image";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 
 /**
  * Admin Articles Page - Kelola artikel/berita
@@ -211,7 +212,10 @@ export default function AdminArticlesPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-primary/60 mb-2">Konten</label>
-                                <textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary resize-none" rows={8} required />
+                                <RichTextEditor 
+                                    content={formData.content} 
+                                    onChange={(content) => setFormData({ ...formData, content })} 
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-primary/60 mb-2">Author</label>
