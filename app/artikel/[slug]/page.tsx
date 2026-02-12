@@ -3,12 +3,13 @@ import { api } from "@/lib/api";
 import ArtikelDetailClient from "./ArtikelDetailClient";
 
 type Props = {
-    params: { slug: string }
+    params: Promise<{ slug: string }>
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { slug } = await params;
     try {
-        const article = await api.content.articleBySlug(params.slug);
+        const article = await api.content.articleBySlug(slug);
         return {
             title: article.title,
             description: article.excerpt,
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 }
 
-export default function Page() {
+export default async function Page({ params }: Props) {
+    const { slug } = await params;
     return <ArtikelDetailClient />;
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Comfortaa, Inter } from "next/font/google";
 import "./globals.css";
+import { api } from "@/lib/api";
+import PWARegistration from "@/components/PWARegistration";
 
 const comfortaa = Comfortaa({
   subsets: ["latin"],
@@ -13,8 +15,6 @@ const inter = Inter({
   variable: "--font-inter",
   display: "swap",
 });
-
-import { api } from "@/lib/api";
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -48,8 +48,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport = {
   themeColor: "#255D74",
 };
-
-import PWARegistration from "@/components/PWARegistration";
 
 export default function RootLayout({
   children,
