@@ -259,7 +259,82 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
     return res.json();
 }
 
-// Specific API calls
+
+// Placement Test API
+export const placementTestApi = {
+    list: () => fetcher<{ data: any[] }>('/v1/placement-tests'),
+    show: (slug: string) => fetcher<{ data: any }>(`/v1/placement-tests/${slug}`),
+    start: (testId: string, data: any) => fetcher<{ data: { attempt_id: string } }>(`/v1/placement-tests/${testId}/start`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+    getAttempt: (attemptId: string) => fetcher<{ data: any }>(`/v1/placement-tests/attempt/${attemptId}`),
+    submitAnswer: (attemptId: string, data: any) => fetcher<{ data: any }>(`/v1/placement-tests/attempt/${attemptId}/answer`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+    complete: (attemptId: string) => fetcher<{ data: { attempt_id: string } }>(`/v1/placement-tests/attempt/${attemptId}/complete`, {
+        method: 'POST',
+    }),
+    getResult: (attemptId: string) => fetcher<{ data: any }>(`/v1/placement-tests/result/${attemptId}`),
+    downloadResult: (attemptId: string) => `${BASE_URL}/v1/placement-tests/result/${attemptId}/download`,
+};
+
+// Classes API
+export const classesApi = {
+    list: (params?: string) => fetcher<{ data: any[] }>(`/v1/classes${params ? `?${params}` : ''}`),
+    show: (slug: string) => fetcher<{ data: any }>(`/v1/classes/${slug}`),
+};
+
+// Enrollments API
+export const enrollmentsApi = {
+    list: (params?: string) => fetcher<{ data: any[] }>(`/v1/enrollments${params ? `?${params}` : ''}`),
+    create: (classId: string) => fetcher<{ data: any }>(`/v1/enrollments/create/${classId}`),
+    store: (data: any) => fetcher<{ data: { enrollment_id: string } }>('/v1/enrollments', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+    show: (enrollmentId: string) => fetcher<{ data: any }>(`/v1/enrollments/${enrollmentId}`),
+    cancel: (enrollmentId: string, reason: string) => fetcher<{ data: any }>(`/v1/enrollments/${enrollmentId}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({ cancellation_reason: reason }),
+    }),
+};
+
+// Payments API
+export const paymentsApi = {
+    create: (enrollmentId: string) => fetcher<{ data: { payment_id: string; xendit_invoice_url: string } }>(`/v1/payments/create/${enrollmentId}`, {
+        method: 'POST',
+    }),
+    show: (paymentId: string) => fetcher<{ data: any }>(`/v1/payments/${paymentId}`),
+    checkStatus: (paymentId: string) => fetcher<{ data: any }>(`/v1/payments/${paymentId}/check`),
+    downloadReceipt: (paymentId: string) => `${BASE_URL}/v1/payments/${paymentId}/receipt`,
+};
+
+// Auth API (Sanctum)
+export const authApi = {
+    register: (data: any) => fetcher<{ data: any }>('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+    login: (credentials: any) => fetcher<{ data: { user: any; token: string } }>('/v1/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+    }),
+    logout: () => fetcher<{ data: any }>('/v1/auth/logout', {
+        method: 'POST',
+    }),
+    me: () => fetcher<{ data: any }>('/v1/user'),
+    forgotPassword: (data: any) => fetcher<{ data: any }>('/v1/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+    resetPassword: (data: any) => fetcher<{ data: any }>('/v1/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    }),
+};
+
 export const api = {
     projects: {
         list: (params?: string) => fetcher<PaginatedResponse<BackendProject>>(`/showcase/projects/${params ? `?${params}` : ''}`),

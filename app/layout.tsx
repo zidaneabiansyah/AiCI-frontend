@@ -3,6 +3,8 @@ import { Comfortaa, Inter } from "next/font/google";
 import "./globals.css";
 import { api } from "@/lib/api";
 import PWARegistration from "@/components/PWARegistration";
+import { QueryProvider } from "@/providers/query-provider";
+import { ToastProvider } from "@/providers/toast-provider";
 
 const comfortaa = Comfortaa({
   subsets: ["latin"],
@@ -59,8 +61,11 @@ export default function RootLayout({
       <body
         className={`${comfortaa.variable} ${inter.variable} antialiased`}
       >
-        <PWARegistration />
-        {children}
+        <QueryProvider>
+          <PWARegistration />
+          <ToastProvider />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
