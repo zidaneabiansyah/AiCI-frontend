@@ -1,161 +1,421 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api, BackendPartner } from "@/lib/api";
 import Image from "next/image";
+import toast from "react-hot-toast";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-/**
- * Admin Partners Page - Kelola partner/sponsor logos
- * Form fields: name, logo, website_url
- */
+interface SortableItemProps {
+    partner: BackendPartner;
+    onEdit: (partner: BackendPartner) => void;
+    onDelete: (id: string) => void;
+}
+
+function SortablePartnerCard({ partner, onEdit, onDelete }: SortableItemProps) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: partner.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group"
+        >
+            {/* Drag Handle */}
+            <div className="flex justify-between items-start mb-6">
+                <button
+                    {...attributes}
+                    {...listeners}
+                    className="cursor-grab active:cursor-grabbing text-primary/30 hover:text-primary transition-colors"
+                    title="Drag to reorder"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                    </svg>
+                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => onEdit(partner)}
+                        className="w-8 h-8 bg-gray-50 text-primary/40 rounded-lg flex items-center justify-center hover:bg-primary hover:text-white transition-all"
+                        title="Edit"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => onDelete(partner.id)}
+                        className="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                        title="Delete"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Logo */}
+            <div className="relative w-full aspect-video bg-gray-50 rounded-2xl overflow-hidden mb-4 flex items-center justify-center p-6">
+                {partner.logo ? (
+                    <Image
+                        src={partner.logo}
+                        alt={partner.name}
+                        fill
+                        className="object-contain p-4"
+                    />
+                ) : (
+                    <div className="text-primary/20 text-4xl font-bold">
+                        {partner.name.charAt(0)}
+                    </div>
+                )}
+            </div>
+
+            {/* Info */}
+            <div className="text-center">
+                <h4 className="font-bold text-primary text-lg truncate mb-1">{partner.name}</h4>
+                {partner.website_url && (
+                    <a
+                        href={partner.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-secondary hover:underline truncate block"
+                    >
+                        Visit Website →
+                    </a>
+                )}
+            </div>
+        </div>
+    );
+}
 
 export default function AdminPartnersPage() {
     const [partners, setPartners] = useState<BackendPartner[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
-    const [editingItem, setEditingItem] = useState<BackendPartner | null>(null);
-    const [submitting, setSubmitting] = useState(false);
-    
-    const [formData, setFormData] = useState({ name: "", website_url: "" });
-    const [logoFile, setLogoFile] = useState<File | null>(null);
-    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingPartner, setEditingPartner] = useState<BackendPartner | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Form state
+    const [name, setName] = useState("");
+    const [websiteUrl, setWebsiteUrl] = useState("");
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState("");
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => { fetchData(); }, []);
+    // Drag and drop sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
-    const fetchData = async () => {
+    const loadPartners = async () => {
+        setIsLoading(true);
         try {
             const data = await api.content.partners();
             setPartners(data.results);
-        } catch (error) { console.error("Failed to fetch partners:", error); }
-        finally { setLoading(false); }
+        } catch (err) {
+            console.error("Failed to load partners:", err);
+            toast.error("Failed to load partners");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadPartners();
+    }, []);
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            const oldIndex = partners.findIndex((p) => p.id === active.id);
+            const newIndex = partners.findIndex((p) => p.id === over.id);
+
+            const newOrder = arrayMove(partners, oldIndex, newIndex);
+            setPartners(newOrder);
+
+            // Save new order to backend
+            try {
+                await api.content.reorderPartners(newOrder.map(p => p.id));
+                toast.success("Order updated");
+            } catch (err) {
+                toast.error("Failed to update order");
+                loadPartners(); // Revert on error
+            }
+        }
+    };
+
+    const openModal = (partner?: BackendPartner) => {
+        if (partner) {
+            setEditingPartner(partner);
+            setName(partner.name);
+            setWebsiteUrl(partner.website_url || "");
+            setImagePreview(partner.logo);
+        } else {
+            resetForm();
+        }
+        setIsModalOpen(true);
     };
 
     const resetForm = () => {
-        setFormData({ name: "", website_url: "" });
-        setLogoFile(null);
-        setLogoPreview(null);
-        setEditingItem(null);
+        setEditingPartner(null);
+        setName("");
+        setWebsiteUrl("");
+        setImageFile(null);
+        setImagePreview("");
     };
 
-    const openModal = (item?: BackendPartner) => {
-        if (item) {
-            setEditingItem(item);
-            setFormData({ name: item.name, website_url: item.website_url || "" });
-            setLogoPreview(item.logo);
-        } else { resetForm(); }
-        setShowModal(true);
-    };
-
-    const closeModal = () => { setShowModal(false); resetForm(); };
-
-    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setLogoFile(file);
+            // Validate file size (max 1MB)
+            if (file.size > 1 * 1024 * 1024) {
+                toast.error("Logo size must be less than 1MB");
+                return;
+            }
+
+            setImageFile(file);
             const reader = new FileReader();
-            reader.onloadend = () => setLogoPreview(reader.result as string);
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
             reader.readAsDataURL(file);
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitting(true);
-        try {
-            const data = new FormData();
-            data.append("name", formData.name);
-            if (formData.website_url) data.append("website_url", formData.website_url);
-            if (logoFile) data.append("logo", logoFile);
+        setIsSaving(true);
 
-            if (editingItem) {
-                await api.content.updatePartner(editingItem.id, data);
+        const formData = new FormData();
+        formData.append("name", name);
+        if (websiteUrl) formData.append("website_url", websiteUrl);
+        if (imageFile) formData.append("logo", imageFile);
+
+        try {
+            if (editingPartner) {
+                await api.content.updatePartner(editingPartner.id, formData);
+                toast.success("Partner updated");
             } else {
-                await api.content.createPartner(data);
+                await api.content.createPartner(formData);
+                toast.success("Partner created");
             }
-            await fetchData();
-            closeModal();
-        } catch (error: any) {
-            alert(error.message || "Gagal menyimpan partner");
-        } finally { setSubmitting(false); }
+            setIsModalOpen(false);
+            resetForm();
+            loadPartners();
+        } catch (err: any) {
+            toast.error(err.message || "Failed to save partner");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Yakin ingin menghapus partner ini?")) return;
+        if (!confirm("Delete this partner?")) return;
+
         try {
             await api.content.deletePartner(id);
-            await fetchData();
-        } catch (error: any) { alert(error.message || "Gagal menghapus partner"); }
+            toast.success("Partner deleted");
+            loadPartners();
+        } catch (err) {
+            toast.error("Failed to delete partner");
+        }
     };
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-primary">Partners</h1>
-                    <p className="text-primary/60">Kelola logo partner dan sponsor</p>
+        <div className="space-y-8">
+            {/* Header */}
+            <div className="flex justify-between items-center bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100">
+                <div className="space-y-1">
+                    <h3 className="text-xl font-bold text-primary tracking-tight">Partners & Sponsors</h3>
+                    <p className="text-primary/40 text-xs font-bold uppercase tracking-widest">
+                        {partners.length} partners • Drag to reorder
+                    </p>
                 </div>
-                <button onClick={() => openModal()} className="px-6 py-3 bg-secondary text-white rounded-xl font-bold hover:opacity-90 transition-all flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button
+                    onClick={() => openModal()}
+                    className="bg-primary text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-primary/20 hover:bg-secondary transition-all flex items-center gap-2 group"
+                >
+                    <svg className="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Tambah Partner
+                    Add Partner
                 </button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                {loading ? (
-                    [...Array(6)].map((_, i) => <div key={i} className="bg-white rounded-2xl p-6 animate-pulse"><div className="h-20 bg-gray-100 rounded-lg" /></div>)
-                ) : partners.length === 0 ? (
-                    <div className="col-span-full bg-white rounded-2xl p-12 text-center text-primary/40">Belum ada partner.</div>
-                ) : (
-                    partners.map((partner) => (
-                        <div key={partner.id} className="bg-white rounded-2xl p-6 hover:shadow-lg transition-all group">
-                            <div className="relative h-20 mb-4">
-                                <Image src={partner.logo} alt={partner.name} fill className="object-contain" sizes="150px" />
-                            </div>
-                            <p className="text-center text-sm font-medium text-primary truncate">{partner.name}</p>
-                            <div className="flex justify-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => openModal(partner)} className="p-2 text-primary/40 hover:text-primary">Edit</button>
-                                <button onClick={() => handleDelete(partner.id)} className="p-2 text-red-400 hover:text-red-600">Delete</button>
-                            </div>
+            {/* Grid */}
+            {isLoading ? (
+                <div className="flex justify-center py-20">
+                    <div className="w-12 h-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
+                </div>
+            ) : partners.length === 0 ? (
+                <div className="bg-white rounded-[3rem] p-20 text-center">
+                    <p className="text-4xl mb-4">🤝</p>
+                    <h4 className="text-xl font-bold text-primary mb-2">No partners yet</h4>
+                    <p className="text-primary/60">Add your first partner to get started</p>
+                </div>
+            ) : (
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext
+                        items={partners.map(p => p.id)}
+                        strategy={rectSortingStrategy}
+                    >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {partners.map((partner) => (
+                                <SortablePartnerCard
+                                    key={partner.id}
+                                    partner={partner}
+                                    onEdit={openModal}
+                                    onDelete={handleDelete}
+                                />
+                            ))}
                         </div>
-                    ))
-                )}
-            </div>
+                    </SortableContext>
+                </DndContext>
+            )}
 
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4">
-                        <h2 className="text-xl font-bold text-primary mb-6">{editingItem ? "Edit Partner" : "Tambah Partner"}</h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-primary/60 mb-2">Logo</label>
-                                <div className="flex items-center gap-4">
-                                    {logoPreview ? (
-                                        <div className="relative w-24 h-16 border rounded-lg overflow-hidden">
-                                            <Image src={logoPreview} alt="Preview" fill className="object-contain" sizes="96px" />
-                                        </div>
-                                    ) : (
-                                        <div className="w-24 h-16 border border-dashed rounded-lg flex items-center justify-center text-primary/30">Logo</div>
-                                    )}
-                                    <input type="file" ref={fileInputRef} onChange={handleLogoChange} accept="image/*" className="hidden" />
-                                    <button type="button" onClick={() => fileInputRef.current?.click()} className="px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">Pilih Logo</button>
+            {/* Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-primary/20 backdrop-blur-sm" onClick={() => !isSaving && setIsModalOpen(false)} />
+
+                        <div className="relative bg-white w-full max-w-lg rounded-[3rem] shadow-2xl p-10 md:p-12 animate-in fade-in zoom-in duration-300">
+                            <div className="flex justify-between items-center mb-10">
+                                <h3 className="text-2xl font-bold text-primary">
+                                    {editingPartner ? "Edit Partner" : "Add Partner"}
+                                </h3>
+                                <button
+                                    onClick={() => !isSaving && setIsModalOpen(false)}
+                                    disabled={isSaving}
+                                    className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-primary/20 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-50"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Partner Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        disabled={isSaving}
+                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all text-primary font-medium disabled:opacity-50"
+                                        placeholder="Company Name"
+                                    />
                                 </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-primary/60 mb-2">Nama Partner</label>
-                                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary" placeholder="Contoh: FMIPA UI" required />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-primary/60 mb-2">Website URL (opsional)</label>
-                                <input type="url" value={formData.website_url} onChange={(e) => setFormData({ ...formData, website_url: e.target.value })} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-secondary" placeholder="https://example.com" />
-                            </div>
-                            <div className="flex gap-4 justify-end pt-4">
-                                <button type="button" onClick={closeModal} className="px-6 py-3 border border-gray-200 rounded-xl hover:bg-gray-50" disabled={submitting}>Batal</button>
-                                <button type="submit" className="px-6 py-3 bg-secondary text-white rounded-xl font-bold hover:opacity-90 disabled:opacity-50" disabled={submitting}>{submitting ? "Menyimpan..." : "Simpan"}</button>
-                            </div>
-                        </form>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Website URL (Optional)</label>
+                                    <input
+                                        type="url"
+                                        value={websiteUrl}
+                                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                                        disabled={isSaving}
+                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all text-primary font-medium disabled:opacity-50"
+                                        placeholder="https://example.com"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Logo (Max 1MB, PNG recommended)</label>
+                                    <div
+                                        onClick={() => !isSaving && fileInputRef.current?.click()}
+                                        className="w-full aspect-video bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group"
+                                    >
+                                        {imagePreview ? (
+                                            <Image src={imagePreview} alt="Preview" fill className="object-contain p-8" />
+                                        ) : (
+                                            <div className="text-center space-y-2">
+                                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
+                                                    <svg className="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                                <p className="text-[10px] font-bold text-primary/30 uppercase tracking-widest">Upload Logo</p>
+                                            </div>
+                                        )}
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            accept="image/*"
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsModalOpen(false)}
+                                        disabled={isSaving}
+                                        className="flex-1 bg-gray-50 text-primary font-bold py-5 rounded-2xl hover:bg-gray-100 transition-all uppercase tracking-widest text-xs disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isSaving}
+                                        className="flex-1 bg-primary text-white font-bold py-5 rounded-2xl shadow-xl shadow-primary/20 hover:bg-secondary transition-all uppercase tracking-widest text-xs disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {isSaving ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            editingPartner ? "Save Changes" : "Create Partner"
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

@@ -47,9 +47,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <div className="flex items-center gap-6">
                         <h2 className="text-2xl font-bold text-primary tracking-tight">
                             {pathname === "/admin" ? "Overview" : 
-                            pathname.includes("/projects") ? "Manage Projects" :
-                            pathname.includes("/achievements") ? "Manage Achievements" :
-                            pathname.includes("/categories") ? "Categories" : "Admin Console"}
+                            pathname.includes("/testimonials") ? "Testimonials" :
+                            pathname.includes("/partners") ? "Partners" :
+                            pathname.includes("/facilities") ? "Facilities" :
+                            pathname.includes("/team") ? "Team" :
+                            pathname.includes("/gallery") ? "Gallery" :
+                            pathname.includes("/articles") ? "Articles" :
+                            pathname.includes("/programs") ? "Programs" :
+                            pathname.includes("/settings") ? "Site Settings" :
+                            pathname.includes("/page-content") ? "Page Content" : "Admin Console"}
                         </h2>
                     </div>
                     <div className="flex items-center gap-6">
