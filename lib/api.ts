@@ -336,6 +336,58 @@ export const authApi = {
 };
 
 export const api = {
+    // Admin Management APIs
+    admin: {
+        // Enrollments Management
+        enrollments: {
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/enrollments${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/admin/enrollments/${id}`),
+            approve: (id: string) => fetcher<any>(`/admin/enrollments/${id}/approve`, { method: 'POST' }),
+            cancel: (id: string, reason: string) => fetcher<any>(`/admin/enrollments/${id}/cancel`, {
+                method: 'POST',
+                body: JSON.stringify({ cancellation_reason: reason }),
+            }),
+            export: (params?: string) => `${BASE_URL}/admin/enrollments/export${params ? `?${params}` : ''}`,
+        },
+        // Payments Management
+        payments: {
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/payments${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/admin/payments/${id}`),
+            confirmManual: (id: string) => fetcher<any>(`/admin/payments/${id}/confirm`, { method: 'POST' }),
+            export: (params?: string) => `${BASE_URL}/admin/payments/export${params ? `?${params}` : ''}`,
+        },
+        // Students Management
+        students: {
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/students${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/admin/students/${id}`),
+            export: (params?: string) => `${BASE_URL}/admin/students/export${params ? `?${params}` : ''}`,
+        },
+        // Classes Management
+        classes: {
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/classes${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/admin/classes/${id}`),
+            create: (data: FormData) => fetcher<any>('/admin/classes', { method: 'POST', body: data }),
+            update: (id: string, data: FormData) => fetcher<any>(`/admin/classes/${id}`, { method: 'PATCH', body: data }),
+            delete: (id: string) => fetcher<any>(`/admin/classes/${id}`, { method: 'DELETE' }),
+        },
+        // Placement Tests Management
+        placementTests: {
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/placement-tests${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/admin/placement-tests/${id}`),
+            create: (data: any) => fetcher<any>('/admin/placement-tests', { method: 'POST', body: JSON.stringify(data) }),
+            update: (id: string, data: any) => fetcher<any>(`/admin/placement-tests/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+            delete: (id: string) => fetcher<any>(`/admin/placement-tests/${id}`, { method: 'DELETE' }),
+            // Questions
+            questions: {
+                list: (testId: string) => fetcher<any>(`/admin/placement-tests/${testId}/questions`),
+                create: (testId: string, data: any) => fetcher<any>(`/admin/placement-tests/${testId}/questions`, { method: 'POST', body: JSON.stringify(data) }),
+                update: (testId: string, questionId: string, data: any) => fetcher<any>(`/admin/placement-tests/${testId}/questions/${questionId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+                delete: (testId: string, questionId: string) => fetcher<any>(`/admin/placement-tests/${testId}/questions/${questionId}`, { method: 'DELETE' }),
+            },
+            // Attempts & Results
+            attempts: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/placement-tests/attempts${params ? `?${params}` : ''}`),
+        },
+    },
     projects: {
         list: (params?: string) => fetcher<PaginatedResponse<BackendProject>>(`/showcase/projects/${params ? `?${params}` : ''}`),
         get: (id: string) => fetcher<BackendProject>(`/showcase/projects/${id}/`),

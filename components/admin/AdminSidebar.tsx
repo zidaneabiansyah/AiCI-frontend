@@ -59,6 +59,32 @@ const menuItems = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
     ), section: "content" },
+    // Student Management
+    { name: "Enrollments", href: "/admin/enrollments", icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+    ), section: "student" },
+    { name: "Payments", href: "/admin/payments", icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+    ), section: "student" },
+    { name: "Students", href: "/admin/students", icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+    ), section: "student" },
+    { name: "Classes", href: "/admin/classes", icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+    ), section: "student" },
+    { name: "Placement Tests", href: "/admin/placement-tests", icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+    ), section: "student" },
 ];
 
 interface AdminSidebarProps {
@@ -133,10 +159,73 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
             {/* Menu Sections */}
             <div className="flex-1 space-y-2 overflow-hidden">
+                {/* Main Navigation */}
                 <p className={`text-[10px] font-bold text-primary/30 uppercase tracking-[0.2em] mb-4 transition-all duration-300 ${isOpen ? "ml-4 opacity-100" : "opacity-0 h-0 overflow-hidden"}`}>
                     Main Navigation
                 </p>
-                {menuItems.map((item) => {
+                {menuItems.filter(item => item.section === "main").map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Link 
+                            key={item.href} 
+                            href={item.href}
+                            title={!isOpen ? item.name : ""}
+                            className={`flex items-center rounded-2xl font-bold transition-all duration-300 group ${
+                                isOpen ? "gap-4 px-4 py-4" : "justify-center p-4"
+                            } ${
+                                isActive 
+                                ? "bg-primary text-white shadow-xl shadow-primary/10" 
+                                : "text-primary/50 hover:bg-gray-50 hover:text-primary"
+                            }`}
+                        >
+                            <span className={`${isActive ? "text-white" : "text-primary/40 group-hover:text-secondary"} transition-colors shrink-0`}>
+                                {item.icon}
+                            </span>
+                            {isOpen && (
+                                <span className="truncate animate-in fade-in slide-in-from-left-2 duration-300">
+                                    {item.name}
+                                </span>
+                            )}
+                        </Link>
+                    );
+                })}
+
+                {/* Content Management */}
+                <p className={`text-[10px] font-bold text-primary/30 uppercase tracking-[0.2em] mb-4 mt-8 transition-all duration-300 ${isOpen ? "ml-4 opacity-100" : "opacity-0 h-0 overflow-hidden"}`}>
+                    Content Management
+                </p>
+                {menuItems.filter(item => item.section === "content").map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Link 
+                            key={item.href} 
+                            href={item.href}
+                            title={!isOpen ? item.name : ""}
+                            className={`flex items-center rounded-2xl font-bold transition-all duration-300 group ${
+                                isOpen ? "gap-4 px-4 py-4" : "justify-center p-4"
+                            } ${
+                                isActive 
+                                ? "bg-primary text-white shadow-xl shadow-primary/10" 
+                                : "text-primary/50 hover:bg-gray-50 hover:text-primary"
+                            }`}
+                        >
+                            <span className={`${isActive ? "text-white" : "text-primary/40 group-hover:text-secondary"} transition-colors shrink-0`}>
+                                {item.icon}
+                            </span>
+                            {isOpen && (
+                                <span className="truncate animate-in fade-in slide-in-from-left-2 duration-300">
+                                    {item.name}
+                                </span>
+                            )}
+                        </Link>
+                    );
+                })}
+
+                {/* Student Management */}
+                <p className={`text-[10px] font-bold text-primary/30 uppercase tracking-[0.2em] mb-4 mt-8 transition-all duration-300 ${isOpen ? "ml-4 opacity-100" : "opacity-0 h-0 overflow-hidden"}`}>
+                    Student Management
+                </p>
+                {menuItems.filter(item => item.section === "student").map((item) => {
                     const isActive = pathname === item.href;
                     return (
                         <Link 
