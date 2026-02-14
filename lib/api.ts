@@ -403,7 +403,15 @@ export const api = {
         settings: () => fetcher<BackendSiteSettings>('/content/settings/'),
         
         // Page Content (Static Texts)
-        pageContent: (key?: string) => fetcher<any>(`/content/pages/${key ? `?key=${key}` : ''}`), // Returns list if key param used with filter, or check backend implementation
+        pageContent: (key?: string) => fetcher<PaginatedResponse<BackendPageContent>>(`/content/pages/${key ? `?key=${key}` : ''}`),
+        createPageContent: (data: FormData) => fetcher<BackendPageContent>('/content/pages/', {
+            method: 'POST',
+            body: data,
+        }),
+        updatePageContent: (key: string, data: FormData) => fetcher<BackendPageContent>(`/content/pages/${key}/`, {
+            method: 'PATCH',
+            body: data,
+        }),
         
         // Testimonials
         testimonials: () => fetcher<PaginatedResponse<BackendTestimonial>>('/content/testimonials/'),
