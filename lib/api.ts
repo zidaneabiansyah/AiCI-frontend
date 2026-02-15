@@ -403,6 +403,13 @@ export const api = {
             students: (params?: string) => fetcher<any>(`/admin/analytics/students${params ? `?${params}` : ''}`),
             tests: (params?: string) => fetcher<any>(`/admin/analytics/tests${params ? `?${params}` : ''}`),
         },
+        // Reports
+        reports: {
+            summary: (params?: string) => fetcher<any>(`/admin/reports/summary${params ? `?${params}` : ''}`),
+            exportRevenue: (params?: string) => `${BASE_URL}/admin/reports/export/revenue${params ? `?${params}` : ''}`,
+            exportEnrollment: (params?: string) => `${BASE_URL}/admin/reports/export/enrollment${params ? `?${params}` : ''}`,
+            exportStudent: (params?: string) => `${BASE_URL}/admin/reports/export/student${params ? `?${params}` : ''}`,
+        },
     },
     projects: {
         list: (params?: string) => fetcher<PaginatedResponse<BackendProject>>(`/showcase/projects/${params ? `?${params}` : ''}`),
