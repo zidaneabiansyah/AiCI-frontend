@@ -1,11 +1,16 @@
 {
-    "name": "AiCi Showcase",
-    "short_name": "AiCi",
-    "description": "Showcase of innovative student projects from AiCi Robotics & AI.",
+    "name": "AICI - Artificial Intelligence Center Indonesia",
+    "short_name": "AICI",
+    "description": "Pusat pembelajaran dan riset Artificial Intelligence terkemuka di Indonesia. Kelas AI, Robotika, dan Teknologi.",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
+    "orientation": "portrait-primary",
     "background_color": "#ffffff",
     "theme_color": "#255D74",
+    "categories": ["education", "technology", "ai"],
+    "lang": "id",
+    "dir": "ltr",
     "icons": [
         {
             "src": "/icon/aici-logo-otak.png",
@@ -18,6 +23,40 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/icon/aici-logo-otak.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Kelas",
+            "short_name": "Kelas",
+            "description": "Lihat kelas yang tersedia",
+            "url": "/classes",
+            "icons": [
+                {
+                    "src": "/icon/aici-logo-otak.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "Dashboard saya",
+            "url": "/dashboard",
+            "icons": [
+                {
+                    "src": "/icon/aici-logo-otak.png",
+                    "sizes": "96x96"
+                }
+            ]
         }
     ]
 }
