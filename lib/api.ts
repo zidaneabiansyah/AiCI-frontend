@@ -398,55 +398,58 @@ export const api = {
         reorderTestimonials: (ids: string[]) => fetcher<any>('/v1/admin/content/testimonials/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         deleteTestimonial: (id: string) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'DELETE' }),
         
-        // Partners - IMPLEMENTED
+        // Partners
         partners: () => fetcher<{ success: boolean; results: BackendPartner[] }>('/v1/content/partners'),
         createPartner: (data: FormData) => fetcher<any>('/v1/admin/content/partners', { method: 'POST', body: data }),
         updatePartner: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'PATCH', body: data }),
         reorderPartners: (ids: string[]) => fetcher<any>('/v1/admin/content/partners/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         deletePartner: (id: string) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'DELETE' }),
         
-        // Settings - IMPLEMENTED
+        // Settings
         settings: () => fetcher<BackendSiteSettings>('/v1/content/settings'),
         updateSettings: (data: any) => fetcher<any>('/v1/admin/content/settings', { method: 'PATCH', body: JSON.stringify(data) }),
         
-        // Team - IMPLEMENTED
+        // Team
         team: (roleType?: string) => fetcher<{ success: boolean; results: BackendTeamMember[] }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`),
         createTeamMember: (data: FormData) => fetcher<any>('/v1/admin/content/team', { method: 'POST', body: data }),
         updateTeamMember: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'PATCH', body: data }),
         reorderTeamMembers: (ids: string[]) => fetcher<any>('/v1/admin/content/team/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         deleteTeamMember: (id: string) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'DELETE' }),
         
-        // Page Content - IMPLEMENTED
+        // Page Content
         pageContent: (key?: string) => fetcher<any>(`/v1/content/pages${key ? `?key=${key}` : ''}`),
         createPageContent: (data: FormData) => fetcher<any>('/v1/admin/content/pages', { method: 'POST', body: data }),
         updatePageContent: (key: string, data: FormData) => fetcher<any>(`/v1/admin/content/pages/${key}`, { method: 'PATCH', body: data }),
         
-        // Gallery - IMPLEMENTED (read-only for public, admin CRUD not yet)
-        gallery: (params?: string) => fetcher<{ data: BackendGalleryImage[] }>(`/v1/galleries${params ? `?${params}` : ''}`),
+        // Gallery
+        gallery: (params?: string) => fetcher<{ success: boolean; results: BackendGalleryImage[] }>(`/v1/admin/gallery${params ? `?${params}` : ''}`),
         featuredGallery: () => fetcher<{ data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
-        createGalleryImage: (data: FormData) => Promise.reject(new Error('Not implemented')),
-        updateGalleryImage: (id: string, data: FormData) => Promise.reject(new Error('Not implemented')),
-        deleteGalleryImage: (id: string) => Promise.reject(new Error('Not implemented')),
+        createGalleryImage: (data: FormData) => fetcher<any>('/v1/admin/gallery', { method: 'POST', body: data }),
+        updateGalleryImage: (id: string, data: FormData) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'PATCH', body: data }),
+        deleteGalleryImage: (id: string) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'DELETE' }),
         
-        // Articles - IMPLEMENTED (read-only for public, admin CRUD not yet)
-        articles: (params?: string) => fetcher<{ data: BackendArticle[] }>(`/v1/articles${params ? `?${params}` : ''}`),
+        // Articles
+        articles: (params?: string) => fetcher<{ success: boolean; results: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
         articleBySlug: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
-        createArticle: (data: FormData) => Promise.reject(new Error('Not implemented')),
-        updateArticle: (slug: string, data: FormData) => Promise.reject(new Error('Not implemented')),
-        deleteArticle: (slug: string) => Promise.reject(new Error('Not implemented')),
+        createArticle: (data: FormData) => fetcher<any>('/v1/admin/articles', { method: 'POST', body: data }),
+        updateArticle: (slug: string, data: FormData) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'PATCH', body: data }),
+        deleteArticle: (slug: string) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'DELETE' }),
         
-        // Facilities - IMPLEMENTED (read-only for public, admin CRUD not yet)
-        facilities: (category?: string) => fetcher<{ data: BackendFacility[] }>(`/v1/facilities${category ? `?category=${category}` : ''}`),
-        createFacility: (data: FormData) => Promise.reject(new Error('Not implemented')),
-        updateFacility: (id: string, data: FormData) => Promise.reject(new Error('Not implemented')),
-        reorderFacilities: (ids: string[]) => Promise.reject(new Error('Not implemented')),
-        deleteFacility: (id: string) => Promise.reject(new Error('Not implemented')),
+        // Facilities
+        facilities: (category?: string) => fetcher<{ success: boolean; results: BackendFacility[] }>(`/v1/admin/facilities${category ? `?category=${category}` : ''}`),
+        createFacility: (data: FormData) => fetcher<any>('/v1/admin/facilities', { method: 'POST', body: data }),
+        updateFacility: (id: string, data: FormData) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'PATCH', body: data }),
+        reorderFacilities: (ids: string[]) => fetcher<any>('/v1/admin/facilities/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
+        deleteFacility: (id: string) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'DELETE' }),
         
-        // Programs - IMPLEMENTED (read-only for public, admin CRUD not yet)
-        programs: () => fetcher<{ data: BackendProgram[] }>('/v1/programs'),
-        reorderPrograms: (ids: string[]) => Promise.reject(new Error('Not implemented')),
+        // Programs
+        programs: () => fetcher<{ success: boolean; results: BackendProgram[] }>('/v1/admin/programs'),
+        createProgram: (data: FormData) => fetcher<any>('/v1/admin/programs', { method: 'POST', body: data }),
+        updateProgram: (id: string, data: FormData) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'PATCH', body: data }),
+        deleteProgram: (id: string) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'DELETE' }),
+        reorderPrograms: (ids: string[]) => fetcher<any>('/v1/admin/programs/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         
-        // Contact - IMPLEMENTED
+        // Contact
         sendContact: (data: { name: string; email: string; phone?: string; subject: string; message: string }) =>
             fetcher<any>('/v1/content/contact', { method: 'POST', body: JSON.stringify(data) }),
     },
