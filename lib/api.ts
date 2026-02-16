@@ -179,7 +179,7 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
                 isRefreshing = false;
                 localStorage.removeItem('aici_token');
                 localStorage.removeItem('aici_refresh');
-                
+
                 // If public, try one last time without auth
                 if (isPublicEndpoint(endpoint) && options?.method === 'GET' || !options?.method) {
                     res = await attemptFetch(false);
@@ -370,6 +370,7 @@ export const api = {
             exportRevenue: (params?: string) => `${BASE_URL}/v1/admin/reports/export/revenue${params ? `?${params}` : ''}`,
             exportEnrollment: (params?: string) => `${BASE_URL}/v1/admin/reports/export/enrollment${params ? `?${params}` : ''}`,
             exportStudent: (params?: string) => `${BASE_URL}/v1/admin/reports/export/student${params ? `?${params}` : ''}`,
+        },
     },
     // Public Content APIs (Laravel endpoints with /v1 prefix)
     programs: {
@@ -388,69 +389,92 @@ export const api = {
         list: (params?: string) => fetcher<{ data: BackendArticle[] }>(`/v1/articles${params ? `?${params}` : ''}`),
         show: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
     },
-    
+
     // Content Management APIs
     content: {
         // Testimonials
-        testimonials: () => fetcher<{ success: boolean; results: BackendTestimonial[] }>('/v1/content/testimonials'),
+        testimonials: () => fetcher<{
+            count: number; success: boolean; results: BackendTestimonial[]
+        }>('/v1/content/testimonials'),
         createTestimonial: (data: FormData) => fetcher<any>('/v1/admin/content/testimonials', { method: 'POST', body: data }),
         updateTestimonial: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'PATCH', body: data }),
         reorderTestimonials: (ids: string[]) => fetcher<any>('/v1/admin/content/testimonials/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         deleteTestimonial: (id: string) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'DELETE' }),
-        
+
         // Partners
-        partners: () => fetcher<{ success: boolean; results: BackendPartner[] }>('/v1/content/partners'),
+        partners: () => fetcher<{
+            count: number; success: boolean; results: BackendPartner[]
+        }>('/v1/content/partners'),
         createPartner: (data: FormData) => fetcher<any>('/v1/admin/content/partners', { method: 'POST', body: data }),
         updatePartner: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'PATCH', body: data }),
         reorderPartners: (ids: string[]) => fetcher<any>('/v1/admin/content/partners/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         deletePartner: (id: string) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'DELETE' }),
-        
+
         // Settings
         settings: () => fetcher<BackendSiteSettings>('/v1/content/settings'),
         updateSettings: (data: any) => fetcher<any>('/v1/admin/content/settings', { method: 'PATCH', body: JSON.stringify(data) }),
-        
+
         // Team
-        team: (roleType?: string) => fetcher<{ success: boolean; results: BackendTeamMember[] }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`),
+        team: (roleType?: string) => fetcher<{
+            count: number; success: boolean; results: BackendTeamMember[]
+        }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`),
         createTeamMember: (data: FormData) => fetcher<any>('/v1/admin/content/team', { method: 'POST', body: data }),
         updateTeamMember: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'PATCH', body: data }),
         reorderTeamMembers: (ids: string[]) => fetcher<any>('/v1/admin/content/team/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         deleteTeamMember: (id: string) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'DELETE' }),
-        
+
         // Page Content
         pageContent: (key?: string) => fetcher<any>(`/v1/content/pages${key ? `?key=${key}` : ''}`),
         createPageContent: (data: FormData) => fetcher<any>('/v1/admin/content/pages', { method: 'POST', body: data }),
         updatePageContent: (key: string, data: FormData) => fetcher<any>(`/v1/admin/content/pages/${key}`, { method: 'PATCH', body: data }),
-        
+
         // Gallery
-        gallery: (params?: string) => fetcher<{ success: boolean; results: BackendGalleryImage[] }>(`/v1/admin/gallery${params ? `?${params}` : ''}`),
+        gallery: (params?: string) => fetcher<{
+            count: number; success: boolean; results: BackendGalleryImage[]
+        }>(`/v1/admin/gallery${params ? `?${params}` : ''}`),
         featuredGallery: () => fetcher<{ data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
         createGalleryImage: (data: FormData) => fetcher<any>('/v1/admin/gallery', { method: 'POST', body: data }),
         updateGalleryImage: (id: string, data: FormData) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'PATCH', body: data }),
         deleteGalleryImage: (id: string) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'DELETE' }),
-        
+
         // Articles
-        articles: (params?: string) => fetcher<{ success: boolean; results: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
+        articles: (params?: string) => fetcher<{ success: boolean; count: number; next: string | null; previous: string | null; results: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
         articleBySlug: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
         createArticle: (data: FormData) => fetcher<any>('/v1/admin/articles', { method: 'POST', body: data }),
         updateArticle: (slug: string, data: FormData) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'PATCH', body: data }),
         deleteArticle: (slug: string) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'DELETE' }),
-        
+
         // Facilities
-        facilities: (category?: string) => fetcher<{ success: boolean; results: BackendFacility[] }>(`/v1/admin/facilities${category ? `?category=${category}` : ''}`),
+        facilities: (category?: string) => fetcher<{
+            count: number; success: boolean; results: BackendFacility[]
+        }>(`/v1/admin/facilities${category ? `?category=${category}` : ''}`),
         createFacility: (data: FormData) => fetcher<any>('/v1/admin/facilities', { method: 'POST', body: data }),
         updateFacility: (id: string, data: FormData) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'PATCH', body: data }),
         reorderFacilities: (ids: string[]) => fetcher<any>('/v1/admin/facilities/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         deleteFacility: (id: string) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'DELETE' }),
-        
+
         // Programs
-        programs: () => fetcher<{ success: boolean; results: BackendProgram[] }>('/v1/admin/programs'),
+        programs: () => fetcher<{
+            count: number; success: boolean; results: BackendProgram[]
+        }>('/v1/admin/programs'),
         createProgram: (data: FormData) => fetcher<any>('/v1/admin/programs', { method: 'POST', body: data }),
         updateProgram: (id: string, data: FormData) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'PATCH', body: data }),
         deleteProgram: (id: string) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'DELETE' }),
         reorderPrograms: (ids: string[]) => fetcher<any>('/v1/admin/programs/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
-        
+
         // Contact
         sendContact: (data: { name: string; email: string; phone?: string; subject: string; message: string }) =>
             fetcher<any>('/v1/content/contact', { method: 'POST', body: JSON.stringify(data) }),
     },
-},}
+    auth: {
+        login: (credentials: any) => fetcher<{ access: string; refresh: string }>('/v1/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(credentials),
+        }),
+        me: () => fetcher<any>('/v1/user'),
+        refresh: (refresh: string) => fetcher<{ access: string }>('/v1/auth/refresh', {
+            method: 'POST',
+            body: JSON.stringify({ refresh }),
+        }),
+    },
+}

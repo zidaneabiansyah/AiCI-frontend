@@ -17,26 +17,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     try {
         // Fetch all dynamic content for indexing
-        const [articles, projects] = await Promise.all([
-            api.content.articles(),
-            api.projects.list(),
-        ]);
+        const articles = await api.content.articles();
 
-        const articleRoutes: MetadataRoute.Sitemap = articles.results.map((article) => ({
+        const articleRoutes: MetadataRoute.Sitemap = articles.results.map((article: any) => ({
             url: `${BASE_URL}/artikel/${article.slug}`,
             lastModified: new Date(article.published_at || article.created_at),
             changeFrequency: 'monthly',
             priority: 0.7,
         }));
 
-        const projectRoutes: MetadataRoute.Sitemap = projects.results.map((project) => ({
-            url: `${BASE_URL}/showcase/${project.id}`, // Note: update if project detail page exists
-            lastModified: new Date(project.created_at),
-            changeFrequency: 'monthly',
-            priority: 0.6,
-        }));
-
-        return [...staticRoutes, ...articleRoutes, ...projectRoutes];
+        return [...staticRoutes, ...articleRoutes];
     } catch (error) {
         console.error("Failed to generate sitemap:", error);
         return staticRoutes;

@@ -31,8 +31,8 @@ export default function ArtikelDetailPage() {
 
     const fetchArticle = async () => {
         try {
-            const data = await api.content.articleBySlug(slug);
-            setArticle(data);
+            const response = await api.content.articleBySlug(slug);
+            setArticle(response.data);
         } catch (err) {
             console.error("Failed to fetch article:", err);
             setError("Artikel tidak ditemukan");

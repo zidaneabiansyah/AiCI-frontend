@@ -22,30 +22,12 @@ import { ImageSkeleton } from "@/components/ui/Skeleton";
 export default function GaleriPage() {
     const [images, setImages] = useState<BackendGalleryImage[]>([]);
     const [loading, setLoading] = useState(true);
-    const [nextPage, setNextPage] = useState<string | null>(null);
     const [selectedImage, setSelectedImage] = useState<BackendGalleryImage | null>(null);
 
-    const fetchGallery = async (url?: string | null, append = false) => {
-        if (!url && append) return; 
-        
+    const fetchGallery = async () => {
         try {
-            // If url is provided (full url from next), extract params. 
-            // If not provided, it's initial load (undefined).
-            let params = undefined;
-            if (url) {
-                const urlObj = new URL(url);
-                params = urlObj.searchParams.toString();
-            }
-
-            const res = await api.content.gallery(params);
-            
-            if (append) {
-                setImages(prev => [...prev, ...res.results]);
-            } else {
-                setImages(res.results);
-            }
-            
-            setNextPage(res.next);
+            const res = await api.content.gallery();
+            setImages(res.results);
         } catch (err) {
             console.error("Failed to fetch gallery", err);
         } finally {
@@ -56,12 +38,6 @@ export default function GaleriPage() {
     useEffect(() => {
         fetchGallery();
     }, []);
-
-    const handleLoadMore = () => {
-        if (nextPage) {
-            fetchGallery(nextPage, true);
-        }
-    };
 
     return (
         <main className="min-h-screen">
@@ -142,18 +118,6 @@ export default function GaleriPage() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    )}
-                    
-                    {/* Load More Button */}
-                    {nextPage && (
-                        <div className="text-center mt-12">
-                            <button 
-                                onClick={handleLoadMore}
-                                className="px-8 py-3 border-2 border-primary text-primary rounded-full font-bold hover:bg-primary hover:text-white transition-all"
-                            >
-                                {loading ? "Memuat..." : "Lihat Lebih Banyak"}
-                            </button>
                         </div>
                     )}
                 </div>
