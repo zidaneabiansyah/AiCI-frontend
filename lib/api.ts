@@ -1,43 +1,4 @@
-export interface BackendCategory {
-    id: string;
-    name: string;
-    description: string;
-}
-
-export interface BackendStudent {
-    id: string;
-    full_name: string;
-    angkatan: string;
-    bio: string;
-    photo: string | null;
-}
-
-export interface BackendProject {
-    id: string;
-    student?: BackendStudent;
-    student_name?: string;
-    category: string;
-    category_name: string;
-    title: string;
-    description: string;
-    thumbnail: string;
-    likes_count: number;
-    demo_url?: string;
-    video_url?: string;
-    created_at: string;
-}
-
-export interface BackendAchievement {
-    id: string;
-    title: string;
-    description: string;
-    image: string;
-    date: string;
-    category: 'Competition' | 'Recognition' | 'Partnership';
-    link?: string;
-}
-
-// Content Types
+// Laravel Backend Types
 export interface BackendTestimonial {
     id: string;
     name: string;
@@ -229,7 +190,7 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
         } else if (isRefreshing) {
             // Wait for existing refresh
             return new Promise((resolve) => {
-                addRefreshSubscriber(async (token) => {
+                addRefreshSubscriber(async () => {
                     resolve(await (await attemptFetch()).json());
                 });
             }) as any;
@@ -340,249 +301,153 @@ export const api = {
     admin: {
         // Enrollments Management
         enrollments: {
-            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/enrollments${params ? `?${params}` : ''}`),
-            get: (id: string) => fetcher<any>(`/admin/enrollments/${id}`),
-            approve: (id: string) => fetcher<any>(`/admin/enrollments/${id}/approve`, { method: 'POST' }),
-            cancel: (id: string, reason: string) => fetcher<any>(`/admin/enrollments/${id}/cancel`, {
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/v1/admin/enrollments${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/v1/admin/enrollments/${id}`),
+            approve: (id: string) => fetcher<any>(`/v1/admin/enrollments/${id}/approve`, { method: 'POST' }),
+            cancel: (id: string, reason: string) => fetcher<any>(`/v1/admin/enrollments/${id}/cancel`, {
                 method: 'POST',
                 body: JSON.stringify({ cancellation_reason: reason }),
             }),
-            export: (params?: string) => `${BASE_URL}/admin/enrollments/export${params ? `?${params}` : ''}`,
+            export: (params?: string) => `${BASE_URL}/v1/admin/enrollments/export${params ? `?${params}` : ''}`,
         },
         // Payments Management
         payments: {
-            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/payments${params ? `?${params}` : ''}`),
-            get: (id: string) => fetcher<any>(`/admin/payments/${id}`),
-            confirmManual: (id: string) => fetcher<any>(`/admin/payments/${id}/confirm`, { method: 'POST' }),
-            export: (params?: string) => `${BASE_URL}/admin/payments/export${params ? `?${params}` : ''}`,
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/v1/admin/payments${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/v1/admin/payments/${id}`),
+            confirmManual: (id: string) => fetcher<any>(`/v1/admin/payments/${id}/confirm`, { method: 'POST' }),
+            export: (params?: string) => `${BASE_URL}/v1/admin/payments/export${params ? `?${params}` : ''}`,
         },
         // Students Management
         students: {
-            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/students${params ? `?${params}` : ''}`),
-            get: (id: string) => fetcher<any>(`/admin/students/${id}`),
-            export: (params?: string) => `${BASE_URL}/admin/students/export${params ? `?${params}` : ''}`,
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/v1/admin/students${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/v1/admin/students/${id}`),
+            export: (params?: string) => `${BASE_URL}/v1/admin/students/export${params ? `?${params}` : ''}`,
         },
         // Classes Management
         classes: {
-            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/classes${params ? `?${params}` : ''}`),
-            get: (id: string) => fetcher<any>(`/admin/classes/${id}`),
-            create: (data: FormData) => fetcher<any>('/admin/classes', { method: 'POST', body: data }),
-            update: (id: string, data: FormData) => fetcher<any>(`/admin/classes/${id}`, { method: 'PATCH', body: data }),
-            delete: (id: string) => fetcher<any>(`/admin/classes/${id}`, { method: 'DELETE' }),
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/v1/admin/classes${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/v1/admin/classes/${id}`),
+            create: (data: FormData) => fetcher<any>('/v1/admin/classes', { method: 'POST', body: data }),
+            update: (id: string, data: FormData) => fetcher<any>(`/v1/admin/classes/${id}`, { method: 'PATCH', body: data }),
+            delete: (id: string) => fetcher<any>(`/v1/admin/classes/${id}`, { method: 'DELETE' }),
         },
         // Placement Tests Management
         placementTests: {
-            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/placement-tests${params ? `?${params}` : ''}`),
-            get: (id: string) => fetcher<any>(`/admin/placement-tests/${id}`),
-            create: (data: any) => fetcher<any>('/admin/placement-tests', { method: 'POST', body: JSON.stringify(data) }),
-            update: (id: string, data: any) => fetcher<any>(`/admin/placement-tests/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-            delete: (id: string) => fetcher<any>(`/admin/placement-tests/${id}`, { method: 'DELETE' }),
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/v1/admin/placement-tests${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/v1/admin/placement-tests/${id}`),
+            create: (data: any) => fetcher<any>('/v1/admin/placement-tests', { method: 'POST', body: JSON.stringify(data) }),
+            update: (id: string, data: any) => fetcher<any>(`/v1/admin/placement-tests/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+            delete: (id: string) => fetcher<any>(`/v1/admin/placement-tests/${id}`, { method: 'DELETE' }),
             // Questions
             questions: {
-                list: (testId: string) => fetcher<any>(`/admin/placement-tests/${testId}/questions`),
-                create: (testId: string, data: any) => fetcher<any>(`/admin/placement-tests/${testId}/questions`, { method: 'POST', body: JSON.stringify(data) }),
-                update: (testId: string, questionId: string, data: any) => fetcher<any>(`/admin/placement-tests/${testId}/questions/${questionId}`, { method: 'PATCH', body: JSON.stringify(data) }),
-                delete: (testId: string, questionId: string) => fetcher<any>(`/admin/placement-tests/${testId}/questions/${questionId}`, { method: 'DELETE' }),
+                list: (testId: string) => fetcher<any>(`/v1/admin/placement-tests/${testId}/questions`),
+                create: (testId: string, data: any) => fetcher<any>(`/v1/admin/placement-tests/${testId}/questions`, { method: 'POST', body: JSON.stringify(data) }),
+                update: (testId: string, questionId: string, data: any) => fetcher<any>(`/v1/admin/placement-tests/${testId}/questions/${questionId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+                delete: (testId: string, questionId: string) => fetcher<any>(`/v1/admin/placement-tests/${testId}/questions/${questionId}`, { method: 'DELETE' }),
             },
             // Attempts & Results
-            attempts: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/placement-tests/attempts${params ? `?${params}` : ''}`),
+            attempts: (params?: string) => fetcher<PaginatedResponse<any>>(`/v1/admin/placement-tests/attempts${params ? `?${params}` : ''}`),
         },
         // Schedules Management
         schedules: {
-            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/admin/schedules${params ? `?${params}` : ''}`),
-            get: (id: string) => fetcher<any>(`/admin/schedules/${id}`),
-            create: (data: any) => fetcher<any>('/admin/schedules', { method: 'POST', body: JSON.stringify(data) }),
-            update: (id: string, data: any) => fetcher<any>(`/admin/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-            delete: (id: string) => fetcher<any>(`/admin/schedules/${id}`, { method: 'DELETE' }),
+            list: (params?: string) => fetcher<PaginatedResponse<any>>(`/v1/admin/schedules${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/v1/admin/schedules/${id}`),
+            create: (data: any) => fetcher<any>('/v1/admin/schedules', { method: 'POST', body: JSON.stringify(data) }),
+            update: (id: string, data: any) => fetcher<any>(`/v1/admin/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+            delete: (id: string) => fetcher<any>(`/v1/admin/schedules/${id}`, { method: 'DELETE' }),
         },
         // Analytics
         analytics: {
-            overview: (dateRange?: string) => fetcher<any>(`/admin/analytics/overview${dateRange ? `?range=${dateRange}` : ''}`),
-            revenue: (params?: string) => fetcher<any>(`/admin/analytics/revenue${params ? `?${params}` : ''}`),
-            enrollments: (params?: string) => fetcher<any>(`/admin/analytics/enrollments${params ? `?${params}` : ''}`),
-            students: (params?: string) => fetcher<any>(`/admin/analytics/students${params ? `?${params}` : ''}`),
-            tests: (params?: string) => fetcher<any>(`/admin/analytics/tests${params ? `?${params}` : ''}`),
+            overview: (dateRange?: string) => fetcher<any>(`/v1/admin/analytics/overview${dateRange ? `?range=${dateRange}` : ''}`),
+            revenue: (params?: string) => fetcher<any>(`/v1/admin/analytics/revenue${params ? `?${params}` : ''}`),
+            enrollments: (params?: string) => fetcher<any>(`/v1/admin/analytics/enrollments${params ? `?${params}` : ''}`),
+            students: (params?: string) => fetcher<any>(`/v1/admin/analytics/students${params ? `?${params}` : ''}`),
+            tests: (params?: string) => fetcher<any>(`/v1/admin/analytics/tests${params ? `?${params}` : ''}`),
         },
         // Reports
         reports: {
-            summary: (params?: string) => fetcher<any>(`/admin/reports/summary${params ? `?${params}` : ''}`),
-            exportRevenue: (params?: string) => `${BASE_URL}/admin/reports/export/revenue${params ? `?${params}` : ''}`,
-            exportEnrollment: (params?: string) => `${BASE_URL}/admin/reports/export/enrollment${params ? `?${params}` : ''}`,
-            exportStudent: (params?: string) => `${BASE_URL}/admin/reports/export/student${params ? `?${params}` : ''}`,
-        },
+            summary: (params?: string) => fetcher<any>(`/v1/admin/reports/summary${params ? `?${params}` : ''}`),
+            exportRevenue: (params?: string) => `${BASE_URL}/v1/admin/reports/export/revenue${params ? `?${params}` : ''}`,
+            exportEnrollment: (params?: string) => `${BASE_URL}/v1/admin/reports/export/enrollment${params ? `?${params}` : ''}`,
+            exportStudent: (params?: string) => `${BASE_URL}/v1/admin/reports/export/student${params ? `?${params}` : ''}`,
     },
-    projects: {
-        list: (params?: string) => fetcher<PaginatedResponse<BackendProject>>(`/showcase/projects/${params ? `?${params}` : ''}`),
-        get: (id: string) => fetcher<BackendProject>(`/showcase/projects/${id}/`),
-        categories: () => fetcher<PaginatedResponse<BackendCategory>>('/showcase/categories/'),
-        createCategory: (data: any) => fetcher<BackendCategory>('/showcase/categories/', {
-            method: 'POST',
-            body: JSON.stringify(data),
-        }),
-        updateCategory: (id: string, data: any) => fetcher<BackendCategory>(`/showcase/categories/${id}/`, {
-            method: 'PATCH',
-            body: JSON.stringify(data),
-        }),
-        deleteCategory: (id: string) => fetcher<any>(`/showcase/categories/${id}/`, { method: 'DELETE' }),
-        // Admin actions
-        listAll: (params?: string) => fetcher<PaginatedResponse<BackendProject>>(`/showcase/projects/${params ? `?${params}` : ''}`),
-        approve: (id: string) => fetcher<any>(`/showcase/projects/${id}/approve/`, { method: 'POST' }),
-        reject: (id: string) => fetcher<any>(`/showcase/projects/${id}/reject/`, { method: 'POST' }),
-        delete: (id: string) => fetcher<any>(`/showcase/projects/${id}/`, { method: 'DELETE' }),
-        create: (data: FormData) => fetcher<BackendProject>('/showcase/projects/', {
-            method: 'POST',
-            body: data,
-        }),
-        update: (id: string, data: FormData) => fetcher<BackendProject>(`/showcase/projects/${id}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
+    // Public Content APIs (Laravel endpoints with /v1 prefix)
+    programs: {
+        list: (params?: string) => fetcher<{ data: BackendProgram[] }>(`/v1/programs${params ? `?${params}` : ''}`),
+        show: (slug: string) => fetcher<{ data: BackendProgram }>(`/v1/programs/${slug}`),
     },
-    users: {
-        listStudents: (params?: string) => fetcher<PaginatedResponse<BackendStudent>>(`/users/students/${params ? `?${params}` : ''}`),
+    facilities: {
+        list: (params?: string) => fetcher<{ data: BackendFacility[] }>(`/v1/facilities${params ? `?${params}` : ''}`),
+        show: (id: string) => fetcher<{ data: BackendFacility }>(`/v1/facilities/${id}`),
     },
-    achievements: {
-        list: () => fetcher<PaginatedResponse<BackendAchievement>>('/achievements/'),
-        create: (data: FormData) => fetcher<BackendAchievement>('/achievements/', {
-            method: 'POST',
-            body: data,
-        }),
-        update: (id: string, data: FormData) => fetcher<BackendAchievement>(`/achievements/${id}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
-        delete: (id: string) => fetcher<any>(`/achievements/${id}/`, { method: 'DELETE' }),
+    galleries: {
+        list: (params?: string) => fetcher<{ data: BackendGalleryImage[] }>(`/v1/galleries${params ? `?${params}` : ''}`),
+        show: (id: string) => fetcher<{ data: BackendGalleryImage }>(`/v1/galleries/${id}`),
     },
-    interactions: {
-        like: (projectId: string) => fetcher<any>('/interactions/likes/', {
-            method: 'POST',
-            body: JSON.stringify({ project: projectId }),
-        }),
+    articles: {
+        list: (params?: string) => fetcher<{ data: BackendArticle[] }>(`/v1/articles${params ? `?${params}` : ''}`),
+        show: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
     },
-    auth: {
-        login: (credentials: any) => fetcher<any>('/users/login/', {
-            method: 'POST',
-            body: JSON.stringify(credentials),
-        }),
-        me: () => fetcher<any>('/users/me/'),
-    },
+    
+    // Content Management APIs
     content: {
-        // Programs
-        programs: () => fetcher<PaginatedResponse<BackendProgram>>('/content/programs/'),
-        reorderPrograms: (ids: string[]) => fetcher<any>('/content/programs/reorder/', {
-            method: 'POST',
-            body: JSON.stringify({ ids }),
-        }),
-        
-        // Site Settings (Global)
-        settings: () => fetcher<BackendSiteSettings>('/content/settings/'),
-        
-        // Page Content (Static Texts)
-        pageContent: (key?: string) => fetcher<PaginatedResponse<BackendPageContent>>(`/content/pages/${key ? `?key=${key}` : ''}`),
-        createPageContent: (data: FormData) => fetcher<BackendPageContent>('/content/pages/', {
-            method: 'POST',
-            body: data,
-        }),
-        updatePageContent: (key: string, data: FormData) => fetcher<BackendPageContent>(`/content/pages/${key}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
-        
         // Testimonials
-        testimonials: () => fetcher<PaginatedResponse<BackendTestimonial>>('/content/testimonials/'),
-        createTestimonial: (data: FormData) => fetcher<BackendTestimonial>('/content/testimonials/', {
-            method: 'POST',
-            body: data,
-        }),
-        updateTestimonial: (id: string, data: FormData) => fetcher<BackendTestimonial>(`/content/testimonials/${id}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
-        reorderTestimonials: (ids: string[]) => fetcher<any>('/content/testimonials/reorder/', {
-            method: 'POST',
-            body: JSON.stringify({ ids }),
-        }),
-        deleteTestimonial: (id: string) => fetcher<any>(`/content/testimonials/${id}/`, { method: 'DELETE' }),
+        testimonials: () => fetcher<{ success: boolean; results: BackendTestimonial[] }>('/v1/content/testimonials'),
+        createTestimonial: (data: FormData) => fetcher<any>('/v1/admin/content/testimonials', { method: 'POST', body: data }),
+        updateTestimonial: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'PATCH', body: data }),
+        reorderTestimonials: (ids: string[]) => fetcher<any>('/v1/admin/content/testimonials/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
+        deleteTestimonial: (id: string) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'DELETE' }),
         
-        // Partners
-        partners: () => fetcher<PaginatedResponse<BackendPartner>>('/content/partners/'),
-        createPartner: (data: FormData) => fetcher<BackendPartner>('/content/partners/', {
-            method: 'POST',
-            body: data,
-        }),
-        updatePartner: (id: string, data: FormData) => fetcher<BackendPartner>(`/content/partners/${id}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
-        reorderPartners: (ids: string[]) => fetcher<any>('/content/partners/reorder/', {
-            method: 'POST',
-            body: JSON.stringify({ ids }),
-        }),
-        deletePartner: (id: string) => fetcher<any>(`/content/partners/${id}/`, { method: 'DELETE' }),
+        // Partners - IMPLEMENTED
+        partners: () => fetcher<{ success: boolean; results: BackendPartner[] }>('/v1/content/partners'),
+        createPartner: (data: FormData) => fetcher<any>('/v1/admin/content/partners', { method: 'POST', body: data }),
+        updatePartner: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'PATCH', body: data }),
+        reorderPartners: (ids: string[]) => fetcher<any>('/v1/admin/content/partners/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
+        deletePartner: (id: string) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'DELETE' }),
         
-        // Facilities
-        facilities: (category?: string) => fetcher<PaginatedResponse<BackendFacility>>(`/content/facilities/${category ? `?category=${category}` : ''}`),
-        createFacility: (data: FormData) => fetcher<BackendFacility>('/content/facilities/', {
-            method: 'POST',
-            body: data,
-        }),
-        updateFacility: (id: string, data: FormData) => fetcher<BackendFacility>(`/content/facilities/${id}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
-        reorderFacilities: (ids: string[]) => fetcher<any>('/content/facilities/reorder/', {
-            method: 'POST',
-            body: JSON.stringify({ ids }),
-        }),
-        deleteFacility: (id: string) => fetcher<any>(`/content/facilities/${id}/`, { method: 'DELETE' }),
+        // Settings - IMPLEMENTED
+        settings: () => fetcher<BackendSiteSettings>('/v1/content/settings'),
+        updateSettings: (data: any) => fetcher<any>('/v1/admin/content/settings', { method: 'PATCH', body: JSON.stringify(data) }),
         
-        // Team
-        team: (roleType?: string) => fetcher<PaginatedResponse<BackendTeamMember>>(`/content/team/${roleType ? `?role_type=${roleType}` : ''}`),
-        createTeamMember: (data: FormData) => fetcher<BackendTeamMember>('/content/team/', {
-            method: 'POST',
-            body: data,
-        }),
-        updateTeamMember: (id: string, data: FormData) => fetcher<BackendTeamMember>(`/content/team/${id}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
-        reorderTeamMembers: (ids: string[]) => fetcher<any>('/content/team/reorder/', {
-            method: 'POST',
-            body: JSON.stringify({ ids }),
-        }),
-        deleteTeamMember: (id: string) => fetcher<any>(`/content/team/${id}/`, { method: 'DELETE' }),
+        // Team - IMPLEMENTED
+        team: (roleType?: string) => fetcher<{ success: boolean; results: BackendTeamMember[] }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`),
+        createTeamMember: (data: FormData) => fetcher<any>('/v1/admin/content/team', { method: 'POST', body: data }),
+        updateTeamMember: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'PATCH', body: data }),
+        reorderTeamMembers: (ids: string[]) => fetcher<any>('/v1/admin/content/team/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
+        deleteTeamMember: (id: string) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'DELETE' }),
         
-        // Gallery
-        gallery: (params?: string) => fetcher<PaginatedResponse<BackendGalleryImage>>(`/content/gallery/${params ? `?${params}` : ''}`),
-        featuredGallery: () => fetcher<PaginatedResponse<BackendGalleryImage>>('/content/gallery/?is_featured=true'),
-        createGalleryImage: (data: FormData) => fetcher<BackendGalleryImage>('/content/gallery/', {
-            method: 'POST',
-            body: data,
-        }),
-        updateGalleryImage: (id: string, data: FormData) => fetcher<BackendGalleryImage>(`/content/gallery/${id}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
-        deleteGalleryImage: (id: string) => fetcher<any>(`/content/gallery/${id}/`, { method: 'DELETE' }),
+        // Page Content - IMPLEMENTED
+        pageContent: (key?: string) => fetcher<any>(`/v1/content/pages${key ? `?key=${key}` : ''}`),
+        createPageContent: (data: FormData) => fetcher<any>('/v1/admin/content/pages', { method: 'POST', body: data }),
+        updatePageContent: (key: string, data: FormData) => fetcher<any>(`/v1/admin/content/pages/${key}`, { method: 'PATCH', body: data }),
         
-        // Articles
-        articles: (params?: string) => fetcher<PaginatedResponse<BackendArticle>>(`/content/articles/${params ? `?${params}` : ''}`),
-        articleBySlug: (slug: string) => fetcher<BackendArticle>(`/content/articles/${slug}/`),
-        createArticle: (data: FormData) => fetcher<BackendArticle>('/content/articles/', {
-            method: 'POST',
-            body: data,
-        }),
-        updateArticle: (slug: string, data: FormData) => fetcher<BackendArticle>(`/content/articles/${slug}/`, {
-            method: 'PATCH',
-            body: data,
-        }),
-        deleteArticle: (slug: string) => fetcher<any>(`/content/articles/${slug}/`, { method: 'DELETE' }),
+        // Gallery - IMPLEMENTED (read-only for public, admin CRUD not yet)
+        gallery: (params?: string) => fetcher<{ data: BackendGalleryImage[] }>(`/v1/galleries${params ? `?${params}` : ''}`),
+        featuredGallery: () => fetcher<{ data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
+        createGalleryImage: (data: FormData) => Promise.reject(new Error('Not implemented')),
+        updateGalleryImage: (id: string, data: FormData) => Promise.reject(new Error('Not implemented')),
+        deleteGalleryImage: (id: string) => Promise.reject(new Error('Not implemented')),
         
-        // Contact
+        // Articles - IMPLEMENTED (read-only for public, admin CRUD not yet)
+        articles: (params?: string) => fetcher<{ data: BackendArticle[] }>(`/v1/articles${params ? `?${params}` : ''}`),
+        articleBySlug: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
+        createArticle: (data: FormData) => Promise.reject(new Error('Not implemented')),
+        updateArticle: (slug: string, data: FormData) => Promise.reject(new Error('Not implemented')),
+        deleteArticle: (slug: string) => Promise.reject(new Error('Not implemented')),
+        
+        // Facilities - IMPLEMENTED (read-only for public, admin CRUD not yet)
+        facilities: (category?: string) => fetcher<{ data: BackendFacility[] }>(`/v1/facilities${category ? `?category=${category}` : ''}`),
+        createFacility: (data: FormData) => Promise.reject(new Error('Not implemented')),
+        updateFacility: (id: string, data: FormData) => Promise.reject(new Error('Not implemented')),
+        reorderFacilities: (ids: string[]) => Promise.reject(new Error('Not implemented')),
+        deleteFacility: (id: string) => Promise.reject(new Error('Not implemented')),
+        
+        // Programs - IMPLEMENTED (read-only for public, admin CRUD not yet)
+        programs: () => fetcher<{ data: BackendProgram[] }>('/v1/programs'),
+        reorderPrograms: (ids: string[]) => Promise.reject(new Error('Not implemented')),
+        
+        // Contact - IMPLEMENTED
         sendContact: (data: { name: string; email: string; phone?: string; subject: string; message: string }) =>
-            fetcher<any>('/content/contact/', {
-                method: 'POST',
-                body: JSON.stringify(data),
-            }),
+            fetcher<any>('/v1/content/contact', { method: 'POST', body: JSON.stringify(data) }),
     },
-};
+},}
