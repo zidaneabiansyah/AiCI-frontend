@@ -98,18 +98,18 @@ export interface PaginatedResponse<T> {
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
 
 const PUBLIC_ENDPOINTS = [
-    '/showcase/projects/',
-    '/showcase/categories/',
-    '/achievements/',
-    '/content/testimonials/',
-    '/content/partners/',
-    '/content/facilities/',
-    '/content/team/',
-    '/content/gallery/',
-    '/content/articles/',
-    '/content/programs/',
-    '/content/settings/',
-    '/content/pages/',
+    '/v1/content/testimonials',
+    '/v1/content/partners',
+    '/v1/content/settings',
+    '/v1/content/team',
+    '/v1/content/pages',
+    '/v1/content/contact',
+    '/v1/programs',
+    '/v1/facilities',
+    '/v1/galleries',
+    '/v1/articles',
+    '/v1/classes',
+    '/v1/placement-tests',
 ];
 
 function isPublicEndpoint(endpoint: string): boolean {
@@ -129,6 +129,8 @@ function addRefreshSubscriber(cb: (token: string) => void) {
 }
 
 export async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const isPublic = isPublicEndpoint(endpoint);
+    
     const getHeaders = (withAuth = true) => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('aici_token') : null;
         const headers: HeadersInit = {
@@ -139,7 +141,7 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
             (headers as any)['Content-Type'] = 'application/json';
         }
 
-        if (token && withAuth) {
+        if (token && withAuth && !isPublic) {
             (headers as any)['Authorization'] = `Bearer ${token}`;
         }
         return headers;
@@ -152,15 +154,15 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
         });
     };
 
-    let res = await attemptFetch();
+    let res = await attemptFetch(!isPublic);
 
-    if (res.status === 401) {
+    if (res.status === 401 && !isPublic) {
         const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('aici_refresh') : null;
 
         if (refreshToken && !isRefreshing) {
             isRefreshing = true;
             try {
-                const refreshRes = await fetch(`${BASE_URL}/users/token/refresh/`, {
+                const refreshRes = await fetch(`${BASE_URL}/v1/auth/refresh`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ refresh: refreshToken }),
@@ -179,11 +181,8 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
                 isRefreshing = false;
                 localStorage.removeItem('aici_token');
                 localStorage.removeItem('aici_refresh');
-
-                // If public, try one last time without auth
-                if (isPublicEndpoint(endpoint) && options?.method === 'GET' || !options?.method) {
-                    res = await attemptFetch(false);
-                } else if (typeof window !== 'undefined' && !endpoint.includes('/users/login/')) {
+                
+                if (typeof window !== 'undefined' && !endpoint.includes('/auth/login')) {
                     window.location.href = '/admin/login';
                 }
             }
@@ -194,13 +193,8 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
                     resolve(await (await attemptFetch()).json());
                 });
             }) as any;
-        } else {
-            // No refresh token or already failed
-            if (isPublicEndpoint(endpoint) && (options?.method === 'GET' || !options?.method)) {
-                res = await attemptFetch(false);
-            } else if (typeof window !== 'undefined' && !endpoint.includes('/users/login/')) {
-                window.location.href = '/admin/login';
-            }
+        } else if (typeof window !== 'undefined' && !endpoint.includes('/auth/login')) {
+            window.location.href = '/admin/login';
         }
     }
 
@@ -454,9 +448,7 @@ export const api = {
         deleteFacility: (id: string) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'DELETE' }),
 
         // Programs
-        programs: () => fetcher<{
-            count: number; success: boolean; results: BackendProgram[]
-        }>('/v1/admin/programs'),
+        programs: () => fetcher<{ data: BackendProgram[] }>('/v1/programs'),
         createProgram: (data: FormData) => fetcher<any>('/v1/admin/programs', { method: 'POST', body: data }),
         updateProgram: (id: string, data: FormData) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'PATCH', body: data }),
         deleteProgram: (id: string) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'DELETE' }),

@@ -25,7 +25,7 @@ const ProgramsPreview = () => {
             try {
                 const res = await api.content.programs();
                 // Take only first 5 programs to fit the layout (6th slot is button)
-                setPrograms(res.results.slice(0, 5));
+                setPrograms(res.data.slice(0, 5));
             } catch (err) {
                 console.error("Failed to fetch programs", err);
             } finally {
@@ -74,7 +74,7 @@ const ProgramsPreview = () => {
                     <div className="flex items-center justify-center p-6">
                         <Link
                             href="/program"
-                            className="bg-[#f03023] text-white px-10 py-5 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-[#d42a1e] transition-all shadow-xl text-center w-full max-w-[280px]"
+                            className="bg-[#f03023] text-white px-10 py-5 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-[#d42a1e] transition-all shadow-xl text-center w-full max-w-70"
                         >
                             DETAIL PROGRAM
                         </Link>
