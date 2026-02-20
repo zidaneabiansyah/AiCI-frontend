@@ -34,8 +34,8 @@ export default function FasilitasPage() {
     useEffect(() => {
         const fetchFacilities = async () => {
             try {
-                const res = await api.content.facilities();
-                setFacilities(res.results);
+                const res = await api.facilities.list();
+                setFacilities(res.data);
             } catch (err) {
                 console.error("Failed to fetch facilities", err);
             } finally {

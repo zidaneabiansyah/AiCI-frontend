@@ -367,28 +367,30 @@ export const api = {
         },
     },
     // Public Content APIs (Laravel endpoints with /v1 prefix)
+    // Note: These use BaseController which returns { success, message, data }
     programs: {
-        list: (params?: string) => fetcher<{ data: BackendProgram[] }>(`/v1/programs${params ? `?${params}` : ''}`),
-        show: (slug: string) => fetcher<{ data: BackendProgram }>(`/v1/programs/${slug}`),
+        list: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendProgram[] }>(`/v1/programs${params ? `?${params}` : ''}`),
+        show: (slug: string) => fetcher<{ success: boolean; message: string; data: BackendProgram }>(`/v1/programs/${slug}`),
     },
     facilities: {
-        list: (params?: string) => fetcher<{ data: BackendFacility[] }>(`/v1/facilities${params ? `?${params}` : ''}`),
-        show: (id: string) => fetcher<{ data: BackendFacility }>(`/v1/facilities/${id}`),
+        list: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendFacility[] }>(`/v1/facilities${params ? `?${params}` : ''}`),
+        show: (id: string) => fetcher<{ success: boolean; message: string; data: BackendFacility }>(`/v1/facilities/${id}`),
     },
     galleries: {
-        list: (params?: string) => fetcher<{ data: BackendGalleryImage[] }>(`/v1/galleries${params ? `?${params}` : ''}`),
-        show: (id: string) => fetcher<{ data: BackendGalleryImage }>(`/v1/galleries/${id}`),
+        list: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendGalleryImage[] }>(`/v1/galleries${params ? `?${params}` : ''}`),
+        show: (id: string) => fetcher<{ success: boolean; message: string; data: BackendGalleryImage }>(`/v1/galleries/${id}`),
     },
     articles: {
-        list: (params?: string) => fetcher<{ data: BackendArticle[] }>(`/v1/articles${params ? `?${params}` : ''}`),
-        show: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
+        list: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendArticle[] }>(`/v1/articles${params ? `?${params}` : ''}`),
+        show: (slug: string) => fetcher<{ success: boolean; message: string; data: BackendArticle }>(`/v1/articles/${slug}`),
     },
 
     // Content Management APIs
+    // Note: ContentController returns { success, results } format
     content: {
         // Testimonials
         testimonials: () => fetcher<{
-            count: number; success: boolean; results: BackendTestimonial[]
+            success: boolean; results: BackendTestimonial[]
         }>('/v1/content/testimonials'),
         createTestimonial: (data: FormData) => fetcher<any>('/v1/admin/content/testimonials', { method: 'POST', body: data }),
         updateTestimonial: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'PATCH', body: data }),
@@ -397,7 +399,7 @@ export const api = {
 
         // Partners
         partners: () => fetcher<{
-            count: number; success: boolean; results: BackendPartner[]
+            success: boolean; results: BackendPartner[]
         }>('/v1/content/partners'),
         createPartner: (data: FormData) => fetcher<any>('/v1/admin/content/partners', { method: 'POST', body: data }),
         updatePartner: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'PATCH', body: data }),
@@ -410,7 +412,7 @@ export const api = {
 
         // Team
         team: (roleType?: string) => fetcher<{
-            count: number; success: boolean; results: BackendTeamMember[]
+            success: boolean; results: BackendTeamMember[]
         }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`),
         createTeamMember: (data: FormData) => fetcher<any>('/v1/admin/content/team', { method: 'POST', body: data }),
         updateTeamMember: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'PATCH', body: data }),
@@ -424,23 +426,23 @@ export const api = {
 
         // Gallery
         gallery: (params?: string) => fetcher<{
-            count: number; success: boolean; results: BackendGalleryImage[]
+            success: boolean; results: BackendGalleryImage[]
         }>(`/v1/admin/gallery${params ? `?${params}` : ''}`),
-        featuredGallery: () => fetcher<{ data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
+        featuredGallery: () => fetcher<{ success: boolean; message: string; data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
         createGalleryImage: (data: FormData) => fetcher<any>('/v1/admin/gallery', { method: 'POST', body: data }),
         updateGalleryImage: (id: string, data: FormData) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'PATCH', body: data }),
         deleteGalleryImage: (id: string) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'DELETE' }),
 
         // Articles
-        articles: (params?: string) => fetcher<{ success: boolean; count: number; next: string | null; previous: string | null; results: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
-        articleBySlug: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
+        articles: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
+        articleBySlug: (slug: string) => fetcher<{ success: boolean; message: string; data: BackendArticle }>(`/v1/articles/${slug}`),
         createArticle: (data: FormData) => fetcher<any>('/v1/admin/articles', { method: 'POST', body: data }),
         updateArticle: (slug: string, data: FormData) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'PATCH', body: data }),
         deleteArticle: (slug: string) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'DELETE' }),
 
         // Facilities
         facilities: (category?: string) => fetcher<{
-            count: number; success: boolean; results: BackendFacility[]
+            success: boolean; results: BackendFacility[]
         }>(`/v1/admin/facilities${category ? `?category=${category}` : ''}`),
         createFacility: (data: FormData) => fetcher<any>('/v1/admin/facilities', { method: 'POST', body: data }),
         updateFacility: (id: string, data: FormData) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'PATCH', body: data }),
@@ -448,7 +450,7 @@ export const api = {
         deleteFacility: (id: string) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'DELETE' }),
 
         // Programs
-        programs: () => fetcher<{ data: BackendProgram[] }>('/v1/programs'),
+        programs: () => fetcher<{ success: boolean; message: string; data: BackendProgram[] }>('/v1/programs'),
         createProgram: (data: FormData) => fetcher<any>('/v1/admin/programs', { method: 'POST', body: data }),
         updateProgram: (id: string, data: FormData) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'PATCH', body: data }),
         deleteProgram: (id: string) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'DELETE' }),

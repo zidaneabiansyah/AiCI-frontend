@@ -199,7 +199,7 @@ export default function ProfilPage() {
             </section>
 
             <section className="py-20 bg-gray-100/50">
-                <div className="max-w-[1600px] mx-auto px-4 md:px-8">
+                <div className="max-w-400 mx-auto px-4 md:px-8">
                     <h2 className="text-3xl font-bold text-primary text-center mb-16">
                         Tim Operasional dan Tutor
                     </h2>

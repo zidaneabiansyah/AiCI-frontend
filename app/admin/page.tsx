@@ -30,7 +30,7 @@ export default function AdminDashboard() {
                     programsData, testimonialsData, partnersData, facilitiesData,
                     teamData, galleryData, articlesData, pagesData
                 ] = await Promise.all([
-                    api.content.programs(),
+                    api.programs.list(),
                     api.content.testimonials(),
                     api.content.partners(),
                     api.content.facilities(),
@@ -41,18 +41,18 @@ export default function AdminDashboard() {
                 ]);
 
                 // Get recent articles
-                const articles = articlesData.results;
+                const articles = articlesData.data;
                 setRecentArticles(articles.slice(0, 5));
                 
                 setStats({
-                    totalPrograms: programsData.count,
-                    totalTestimonials: testimonialsData.count,
-                    totalPartners: partnersData.count,
-                    totalFacilities: facilitiesData.count,
-                    totalTeam: teamData.count,
-                    totalGallery: galleryData.count,
-                    totalArticles: articlesData.count,
-                    totalPages: (pagesData.results || pagesData).length,
+                    totalPrograms: programsData.data.length,
+                    totalTestimonials: testimonialsData.results.length,
+                    totalPartners: partnersData.results.length,
+                    totalFacilities: facilitiesData.results.length,
+                    totalTeam: teamData.results.length,
+                    totalGallery: galleryData.results.length,
+                    totalArticles: articlesData.data.length,
+                    totalPages: (pagesData.results || []).length,
                 });
             } catch (err) {
                 console.error("Failed to load dashboard data:", err);

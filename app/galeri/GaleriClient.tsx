@@ -26,8 +26,8 @@ export default function GaleriPage() {
 
     const fetchGallery = async () => {
         try {
-            const res = await api.content.gallery();
-            setImages(res.results);
+            const res = await api.galleries.list();
+            setImages(res.data);
         } catch (err) {
             console.error("Failed to fetch gallery", err);
         } finally {

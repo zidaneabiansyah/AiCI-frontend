@@ -18,7 +18,7 @@ export default function ProgramPage() {
         const fetchPrograms = async () => {
             try {
                 const res = await api.content.programs();
-                setPrograms(res.results);
+                setPrograms(res.data);
             } catch (err) {
                 console.error("Failed to fetch programs", err);
                 setError("Failed to load programs.");
