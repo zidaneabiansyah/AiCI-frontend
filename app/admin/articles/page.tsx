@@ -31,7 +31,7 @@ export default function AdminArticlesPage() {
         try {
             const params = searchQuery ? `?search=${searchQuery}` : '';
             const data = await api.content.articles(params);
-            setArticles(data.results);
+            setArticles(data.data);
         } catch (err) {
             console.error("Failed to load articles:", err);
             toast.error("Failed to load articles");

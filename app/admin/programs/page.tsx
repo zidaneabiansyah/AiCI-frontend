@@ -116,7 +116,7 @@ export default function AdminProgramsPage() {
         setIsLoading(true);
         try {
             const data = await api.content.programs();
-            setPrograms(data.results);
+            setPrograms(data.data);
         } catch (err) {
             console.error("Failed to load programs:", err);
             toast.error("Failed to load programs");

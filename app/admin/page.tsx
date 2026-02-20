@@ -52,7 +52,7 @@ export default function AdminDashboard() {
                     totalTeam: teamData.results.length,
                     totalGallery: galleryData.results.length,
                     totalArticles: articlesData.data.length,
-                    totalPages: (pagesData.results || []).length,
+                    totalPages: (pagesData.data || []).length,
                 });
             } catch (err) {
                 console.error("Failed to load dashboard data:", err);

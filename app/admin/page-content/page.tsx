@@ -26,7 +26,7 @@ export default function AdminPageContentPage() {
         setIsLoading(true);
         try {
             const data = await api.content.pageContent();
-            setPages(data.results || data);
+            setPages(data.data || []);
         } catch (err) {
             console.error("Failed to load pages:", err);
             toast.error("Failed to load page content");

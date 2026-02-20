@@ -29,15 +29,15 @@ export default function ArtikelPage() {
         setLoading(true);
         // Scroll to top of grid
         if (typeof window !== 'undefined' && params) {
-             const grid = document.getElementById('articles-grid');
-             if (grid) grid.scrollIntoView({ behavior: 'smooth' });
+            const grid = document.getElementById('articles-grid');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth' });
         }
         
         try {
-            const res = await api.content.articles(params);
-            setArticles(res.results);
-            setNextPage(res.next);
-            setPrevPage(res.previous);
+            const res = await api.articles.list(params);
+            setArticles(res.data);
+            setNextPage(null);
+            setPrevPage(null);
         } catch (err) {
             console.error("Failed to fetch articles", err);
         } finally {
