@@ -69,8 +69,46 @@ export default function ProgramPage() {
             {/* Programs Section */}
             <div className="max-w-7xl mx-auto px-6 pb-24">
                 {loading ? (
-                    <div className="flex justify-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0B6282]"></div>
+                    <div className="space-y-12">
+                        {[...Array(3)].map((_, index) => (
+                            <section 
+                                key={`skeleton-${index}`}
+                                className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-gray-100/50"
+                            >
+                                <div className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12 lg:gap-20`}>
+                                    {/* Image Skeleton */}
+                                    <div className="w-full lg:w-1/2 relative group">
+                                        <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-xl bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse">
+                                            <div className="w-full h-full" />
+                                        </div>
+                                    </div>
+
+                                    {/* Text Content Skeleton */}
+                                    <div className="w-full lg:w-1/2 space-y-4">
+                                        {/* Title Skeleton */}
+                                        <div className="h-10 bg-gray-200 rounded-lg animate-pulse w-3/4" />
+                                        
+                                        {/* Description Skeleton */}
+                                        <div className="space-y-3">
+                                            <div className="h-4 bg-gray-200 rounded-lg animate-pulse" />
+                                            <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-5/6" />
+                                            <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-4/6" />
+                                        </div>
+
+                                        {/* More Description Lines */}
+                                        <div className="space-y-3 pt-2">
+                                            <div className="h-4 bg-gray-200 rounded-lg animate-pulse" />
+                                            <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-5/6" />
+                                        </div>
+
+                                        {/* Button Skeleton */}
+                                        <div className="pt-4">
+                                            <div className="h-10 bg-gray-300 rounded-full animate-pulse w-40" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        ))}
                     </div>
                 ) : error ? (
                     <div className="text-center py-20 text-red-500 flex flex-col items-center gap-2">
@@ -87,14 +125,26 @@ export default function ProgramPage() {
                                 <div className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-12 lg:gap-20`}>
                                     {/* Image Container */}
                                     <div className="w-full lg:w-1/2 relative group">
-                                        <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-xl">
-                                            <Image
-                                                src={program.image}
-                                                alt={program.title}
-                                                fill
-                                                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                                sizes="(max-width: 768px) 100vw, 50vw"
-                                            />
+                                        <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-xl bg-gradient-to-br from-gray-200 to-gray-300">
+                                            {program.image ? (
+                                                <Image
+                                                    src={program.image}
+                                                    alt={program.title || 'Program Image'}
+                                                    fill
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                                    priority={index === 0}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="text-center text-gray-500">
+                                                        <svg className="w-16 h-16 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-6-6 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-6-6-5.159 5.159a2.25 2.25 0 0 0 0 3.182l5.159 5.159m0-6 5.159 5.159" />
+                                                        </svg>
+                                                        <p className="text-sm font-medium">Gambar tidak tersedia</p>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 

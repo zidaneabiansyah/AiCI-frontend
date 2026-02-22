@@ -157,44 +157,82 @@ export default function ProfilPage() {
             {/* About Section */}
             <section className="py-16 bg-white">
                 <div className="max-w-7xl mx-auto px-6">
-                    <div className="grid lg:grid-cols-2 gap-12">
-                        <div className="bg-primary/5 p-8 lg:p-12 rounded-2xl">
-                            <div className="flex flex-col gap-8">
-                                <div className="max-w-sm">
-                                    <Image
-                                        src="/icon/aici-logo.png"
-                                        alt="AiCi Logo"
-                                        width={480}
-                                        height={160}
-                                        className="w-full h-auto object-contain"
-                                    />
+                    {loading ? (
+                        <div className="grid lg:grid-cols-2 gap-12">
+                            {/* Logo & About Skeleton */}
+                            <div className="bg-primary/5 p-8 lg:p-12 rounded-2xl">
+                                <div className="flex flex-col gap-8">
+                                    <div className="max-w-sm h-40 bg-gray-200 rounded-lg animate-pulse" />
+                                    <div className="space-y-3">
+                                        <div className="h-4 bg-gray-200 rounded-lg animate-pulse" />
+                                        <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-5/6" />
+                                        <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-4/6" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-primary/90 leading-relaxed font-bold text-base lg:text-lg">
-                                        {about?.content || "Loading..."}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            {/* Visi */}
-                            <div className="mb-10">
-                                <h3 className="text-secondary font-bold text-sm uppercase tracking-[0.2em] mb-4">VISI</h3>
-                                <p className="text-primary/90 font-semibold leading-relaxed">
-                                    {vision?.content || "Loading..."}
-                                </p>
                             </div>
                             
-                            {/* Misi */}
-                            <div>
-                                <h3 className="text-secondary font-bold text-sm uppercase tracking-[0.2em] mb-4">MISI</h3>
-                                <div 
-                                    className="text-primary/90 font-semibold space-y-3 prose prose-blue max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: mission?.content || "Loading..." }}
-                                />
+                            {/* Vision & Mission Skeleton */}
+                            <div className="space-y-12">
+                                {/* Vision */}
+                                <div>
+                                    <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-20 mb-4" />
+                                    <div className="space-y-3">
+                                        <div className="h-4 bg-gray-200 rounded-lg animate-pulse" />
+                                        <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-5/6" />
+                                    </div>
+                                </div>
+                                
+                                {/* Mission */}
+                                <div>
+                                    <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-20 mb-4" />
+                                    <div className="space-y-3">
+                                        <div className="h-4 bg-gray-200 rounded-lg animate-pulse" />
+                                        <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-5/6" />
+                                        <div className="h-4 bg-gray-200 rounded-lg animate-pulse w-4/6" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="grid lg:grid-cols-2 gap-12">
+                            <div className="bg-primary/5 p-8 lg:p-12 rounded-2xl">
+                                <div className="flex flex-col gap-8">
+                                    <div className="max-w-sm">
+                                        <Image
+                                            src="/icon/aici-logo.png"
+                                            alt="AiCi Logo"
+                                            width={480}
+                                            height={160}
+                                            className="w-full h-auto object-contain"
+                                        />
+                                    </div>
+                                    <div>
+                                        <p className="text-primary/90 leading-relaxed font-bold text-base lg:text-lg">
+                                            {about?.content || "Loading..."}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                {/* Visi */}
+                                <div className="mb-10">
+                                    <h3 className="text-secondary font-bold text-sm uppercase tracking-[0.2em] mb-4">VISI</h3>
+                                    <p className="text-primary/90 font-semibold leading-relaxed">
+                                        {vision?.content || "Loading..."}
+                                    </p>
+                                </div>
+                                
+                                {/* Misi */}
+                                <div>
+                                    <h3 className="text-secondary font-bold text-sm uppercase tracking-[0.2em] mb-4">MISI</h3>
+                                    <div 
+                                        className="text-primary/90 font-semibold space-y-3 prose prose-blue max-w-none"
+                                        dangerouslySetInnerHTML={{ __html: mission?.content || "Loading..." }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -205,8 +243,25 @@ export default function ProfilPage() {
                     </h2>
                     
                     {loading ? (
-                        <div className="flex justify-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        <div className="relative overflow-visible group">
+                            {/* Skeleton scroll container */}
+                            <div className="flex overflow-x-auto gap-4 md:gap-6 pb-4 scrollbar-hide">
+                                {[...Array(3)].map((_, index) => (
+                                    <div
+                                        key={`skeleton-${index}`}
+                                        className="min-w-full md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-16px)] flex-shrink-0"
+                                    >
+                                        {/* Image Skeleton */}
+                                        <div className="relative aspect-3/4 w-full bg-gray-200 rounded-sm mb-4 animate-pulse shadow-sm border border-gray-100" />
+                                        
+                                        {/* Text Skeleton */}
+                                        <div className="text-center px-2">
+                                            <div className="h-4 bg-gray-200 rounded-lg animate-pulse mb-2" />
+                                            <div className="h-3 bg-gray-200 rounded-lg animate-pulse w-4/6 mx-auto" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ) : (
                         <div className="relative overflow-visible group">

@@ -40,9 +40,7 @@ export default function AdminLoginPage() {
                 <div className="text-center mb-10">
                     <Link href="/" className="inline-block transform hover:scale-105 transition-transform duration-300">
                         <div className="flex items-center justify-center gap-3">
-                            <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-2xl shadow-black/20">
-                                <span className="text-[#0B6282] font-black text-3xl tracking-tighter">Ai</span>
-                            </div>
+                            <img src="/icon/aici-logo-otak.png" alt="AICI Logo" className="w-16 h-16" />
                             <div className="text-left">
                                 <span className="block text-3xl font-black text-white tracking-tight leading-none">AiCI</span>
                                 <span className="block text-xs font-bold text-white/60 tracking-widest uppercase">Admin Portal</span>

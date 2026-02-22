@@ -1,3 +1,5 @@
+import { getDedupedRequest, getCacheKey } from './request-dedup';
+
 // Laravel Backend Types
 export interface BackendTestimonial {
     id: string;
@@ -131,6 +133,10 @@ function addRefreshSubscriber(cb: (token: string) => void) {
 export async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const isPublic = isPublicEndpoint(endpoint);
     
+    // For GET requests, use deduplication
+    const method = (options?.method || 'GET').toUpperCase();
+    const shouldDedupe = method === 'GET' && !options?.body;
+    
     const getHeaders = (withAuth = true) => {
         const token = typeof window !== 'undefined' ? localStorage.getItem('aici_token') : null;
         const headers: HeadersInit = {
@@ -139,6 +145,11 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
 
         if (!(options?.body instanceof FormData)) {
             (headers as any)['Content-Type'] = 'application/json';
+        }
+
+        // Add cache headers for GET requests
+        if (method === 'GET') {
+            (headers as any)['Cache-Control'] = isPublic ? 'public, max-age=300' : 'private, max-age=60';
         }
 
         if (token && withAuth && !isPublic) {
@@ -153,65 +164,76 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
             headers: getHeaders(withAuth),
         });
     };
+    
+    // Create the actual fetch function
+    const doFetch = async () => {
+        let res = await attemptFetch(!isPublic);
 
-    let res = await attemptFetch(!isPublic);
+        if (res.status === 401 && !isPublic) {
+            const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('aici_refresh') : null;
 
-    if (res.status === 401 && !isPublic) {
-        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('aici_refresh') : null;
+            if (refreshToken && !isRefreshing) {
+                isRefreshing = true;
+                try {
+                    const refreshRes = await fetch(`${BASE_URL}/v1/auth/refresh`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ refresh: refreshToken }),
+                    });
 
-        if (refreshToken && !isRefreshing) {
-            isRefreshing = true;
-            try {
-                const refreshRes = await fetch(`${BASE_URL}/v1/auth/refresh`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ refresh: refreshToken }),
-                });
-
-                if (refreshRes.ok) {
-                    const data = await refreshRes.json();
-                    localStorage.setItem('aici_token', data.access);
+                    if (refreshRes.ok) {
+                        const data = await refreshRes.json();
+                        localStorage.setItem('aici_token', data.access);
+                        isRefreshing = false;
+                        onTokenRefreshed(data.access);
+                        res = await attemptFetch();
+                    } else {
+                        throw new Error("Refresh failed");
+                    }
+                } catch (err) {
                     isRefreshing = false;
-                    onTokenRefreshed(data.access);
-                    res = await attemptFetch();
-                } else {
-                    throw new Error("Refresh failed");
+                    localStorage.removeItem('aici_token');
+                    localStorage.removeItem('aici_refresh');
+                    
+                    if (typeof window !== 'undefined' && !endpoint.includes('/auth/login')) {
+                        window.location.href = '/admin/login';
+                    }
                 }
-            } catch (err) {
-                isRefreshing = false;
-                localStorage.removeItem('aici_token');
-                localStorage.removeItem('aici_refresh');
-                
-                if (typeof window !== 'undefined' && !endpoint.includes('/auth/login')) {
-                    window.location.href = '/admin/login';
-                }
+            } else if (isRefreshing) {
+                // Wait for existing refresh
+                return new Promise((resolve) => {
+                    addRefreshSubscriber(async () => {
+                        resolve(await (await attemptFetch()).json());
+                    });
+                }) as any;
+            } else if (typeof window !== 'undefined' && !endpoint.includes('/auth/login')) {
+                window.location.href = '/admin/login';
             }
-        } else if (isRefreshing) {
-            // Wait for existing refresh
-            return new Promise((resolve) => {
-                addRefreshSubscriber(async () => {
-                    resolve(await (await attemptFetch()).json());
-                });
-            }) as any;
-        } else if (typeof window !== 'undefined' && !endpoint.includes('/auth/login')) {
-            window.location.href = '/admin/login';
         }
-    }
 
-    if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        const errorMessage = error.detail || error.message || 'API request failed';
-        const err = new Error(errorMessage) as any;
-        err.status = res.status;
-        err.data = error;
-        throw err;
-    }
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({}));
+            const errorMessage = error.detail || error.message || 'API request failed';
+            const err = new Error(errorMessage) as any;
+            err.status = res.status;
+            err.data = error;
+            throw err;
+        }
 
-    if (res.status === 204) {
-        return {} as T;
-    }
+        if (res.status === 204) {
+            return {} as T;
+        }
 
-    return res.json();
+        return res.json();
+    };
+    
+    // Use deduplication for GET requests
+    if (shouldDedupe) {
+        const cacheKey = getCacheKey(endpoint, options);
+        return getDedupedRequest(cacheKey, doFetch);
+    }
+    
+    return doFetch();
 }
 
 
