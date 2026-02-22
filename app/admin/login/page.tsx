@@ -18,10 +18,16 @@ export default function AdminLoginPage() {
         setIsLoading(true);
 
         try {
-            const data = await api.auth.login({ username, password });
-            localStorage.setItem("aici_token", data.access);
-            localStorage.setItem("aici_refresh", data.refresh);
-            router.push("/admin");
+            const res = await api.auth.login({ email: username, password });
+            const tokenData = (res as any).data || res;
+            
+            if (tokenData.access) {
+                localStorage.setItem("aici_token", tokenData.access);
+                localStorage.setItem("aici_refresh", tokenData.refresh || tokenData.access);
+                router.push("/admin");
+            } else {
+                throw new Error("Invalid response from server");
+            }
         } catch (err: any) {
             setError(err.message || "Invalid credentials. Please try again.");
         } finally {
@@ -69,13 +75,13 @@ export default function AdminLoginPage() {
                             )}
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Username</label>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Email</label>
                                 <input
-                                    type="text"
+                                    type="email"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all text-[#0B6282] font-medium placeholder:text-gray-400"
-                                    placeholder="Enter your username"
+                                    placeholder="admin@aici.id"
                                     required
                                 />
                             </div>

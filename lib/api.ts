@@ -146,6 +146,7 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
         if (!(options?.body instanceof FormData)) {
             (headers as any)['Content-Type'] = 'application/json';
         }
+        (headers as any)['Accept'] = 'application/json';
 
         // Add cache headers for GET requests
         if (method === 'GET') {
@@ -177,7 +178,10 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
                 try {
                     const refreshRes = await fetch(`${BASE_URL}/v1/auth/refresh`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
                         body: JSON.stringify({ refresh: refreshToken }),
                     });
 
@@ -456,7 +460,7 @@ export const api = {
         deleteGalleryImage: (id: string) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'DELETE' }),
 
         // Articles
-        articles: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
+        articles: (params?: string) => fetcher<{ success: boolean; message: string; results: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
         articleBySlug: (slug: string) => fetcher<{ success: boolean; message: string; data: BackendArticle }>(`/v1/articles/${slug}`),
         createArticle: (data: FormData) => fetcher<any>('/v1/admin/articles', { method: 'POST', body: data }),
         updateArticle: (slug: string, data: FormData) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'PATCH', body: data }),

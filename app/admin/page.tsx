@@ -41,7 +41,7 @@ export default function AdminDashboard() {
                 ]);
 
                 // Get recent articles
-                const articles = articlesData.data;
+                const articles = articlesData.results || [];
                 setRecentArticles(articles.slice(0, 5));
                 
                 setStats({
@@ -51,7 +51,7 @@ export default function AdminDashboard() {
                     totalFacilities: facilitiesData.results.length,
                     totalTeam: teamData.results.length,
                     totalGallery: galleryData.results.length,
-                    totalArticles: articlesData.data.length,
+                    totalArticles: articles.length,
                     totalPages: (pagesData.data || []).length,
                 });
             } catch (err) {

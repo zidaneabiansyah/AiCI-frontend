@@ -150,7 +150,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
                         </div>
                         {isOpen && (
                             <div className="animate-in fade-in slide-in-from-left-2 duration-300">
-                                <span className="text-xl font-bold text-primary tracking-tight block leading-none">Showcase</span>
+                                <span className="text-xl font-bold text-primary tracking-tight block leading-none">Admin</span>
                                 <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Dashboard</span>
                             </div>
                         )}
@@ -173,7 +173,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             </div>
 
             {/* Menu Sections */}
-            <div className="flex-1 space-y-2 overflow-hidden">
+            <div className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden pr-2 -mr-2 scrollbar-none hover:scrollbar-thin scrollbar-thumb-gray-200">
                 {/* Main Navigation */}
                 <p className={`text-[10px] font-bold text-primary/30 uppercase tracking-[0.2em] mb-4 transition-all duration-300 ${isOpen ? "ml-4 opacity-100" : "opacity-0 h-0 overflow-hidden"}`}>
                     Main Navigation
@@ -272,11 +272,11 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             <div className={`mt-auto pt-8 border-t border-gray-50 space-y-4 ${!isOpen && "flex flex-col items-center"}`}>
                 <div className={`flex items-center transition-all ${isOpen ? "gap-4 px-2" : "justify-center"}`}>
                     <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-secondary/10 shrink-0">
-                        {user ? user.username.substring(0, 2).toUpperCase() : "AD"}
+                        {user?.name ? user.name.substring(0, 2).toUpperCase() : "AD"}
                     </div>
                     {isOpen && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
-                            <span className="text-primary font-bold text-sm truncate max-w-35">{user ? user.username : "Administrator"}</span>
+                            <span className="text-primary font-bold text-sm truncate max-w-35">{user?.name || "Administrator"}</span>
                             <span className="text-primary/40 text-[10px] font-bold uppercase tracking-wider">Super Admin</span>
                         </div>
                     )}
