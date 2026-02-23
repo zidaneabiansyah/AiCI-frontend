@@ -43,8 +43,10 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-[#eef2f5] via-white to-[#eef2f5] flex items-center justify-center p-6">
-            {/* Background Decoration */}
+        <div className="min-h-screen flex text-[#255d74]">
+            {/* Left Side - Form */}
+            <div className="w-full lg:w-1/2 bg-linear-to-br from-[#eef2f5] via-white to-[#eef2f5] flex items-center justify-center p-6 relative">
+                {/* Background Decoration */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-20 right-10 w-72 h-72 bg-secondary/5 rounded-full blur-3xl" />
                 <div className="absolute bottom-20 left-10 w-96 h-96 bg-[#255d74]/5 rounded-full blur-3xl" />
@@ -204,6 +206,23 @@ export default function RegisterPage() {
                     <Link href="/" className="text-sm text-[#255d74]/60 hover:text-[#255d74] transition-colors">
                         ← Kembali ke Beranda
                     </Link>
+                </div>
+            </div>
+            </div>
+
+            {/* Right Side - Image */}
+            <div className="hidden lg:flex w-1/2 relative bg-[#1e4a5f] items-center justify-center overflow-hidden border-l border-[#255d74]/10">
+                <img 
+                    src="https://aekheeeecxjeqwtpfwss.supabase.co/storage/v1/object/public/aici%20asset/leanbot.webp"
+                    alt="AICI Register"
+                    className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-[#0d2a38]/80 via-transparent to-transparent" />
+                <div className="relative z-10 text-white p-12 max-w-xl text-center">
+                    <h2 className="text-4xl font-bold mb-4 drop-shadow-md tracking-tight">Mulai Perjalanan Anda</h2>
+                    <p className="text-lg text-white/90 drop-shadow-sm font-medium leading-relaxed">
+                        Bergabunglah dengan AICI dan persiapkan diri Anda bersama program-program unggulan kami untuk menyongsong masa depan teknologi digital.
+                    </p>
                 </div>
             </div>
         </div>
