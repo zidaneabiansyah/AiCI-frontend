@@ -199,8 +199,8 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
                     localStorage.removeItem('aici_token');
                     localStorage.removeItem('aici_refresh');
                     
-                    if (typeof window !== 'undefined' && !endpoint.includes('/auth/login')) {
-                        window.location.href = '/admin/login';
+                    if (typeof window !== 'undefined' && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/logout')) {
+                        window.location.href = '/login';
                     }
                 }
             } else if (isRefreshing) {
@@ -210,8 +210,8 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
                         resolve(await (await attemptFetch()).json());
                     });
                 }) as any;
-            } else if (typeof window !== 'undefined' && !endpoint.includes('/auth/login')) {
-                window.location.href = '/admin/login';
+            } else if (typeof window !== 'undefined' && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/logout')) {
+                window.location.href = '/login';
             }
         }
 

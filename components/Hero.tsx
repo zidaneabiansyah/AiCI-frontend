@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 /**
  * Hero Component
@@ -23,6 +24,7 @@ const carouselImages = [
 
 const Hero = () => {
     const [currentImage, setCurrentImage] = useState(0);
+    const { isAuthenticated } = useAuthStore();
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -53,10 +55,10 @@ const Hero = () => {
                         </p>
 
                         <Link
-                            href="/program"
+                            href={isAuthenticated ? "/placement-test" : "/login"}
                             className="inline-block bg-[#f03023] text-white px-8 py-3 rounded-full font-bold text-xs tracking-widest uppercase hover:bg-[#d42a1e] transition-all shadow-xl"
                         >
-                            JELAJAHI PROGRAM
+                            Ayo Ikut Placement Test!
                         </Link>
                     </div>
 

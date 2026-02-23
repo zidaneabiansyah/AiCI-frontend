@@ -134,7 +134,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const logout = () => {
         localStorage.removeItem("aici_token");
         localStorage.removeItem("aici_refresh");
-        router.push("/admin/login");
+        router.push("/");
     };
 
     return (

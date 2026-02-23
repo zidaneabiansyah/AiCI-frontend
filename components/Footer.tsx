@@ -5,18 +5,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, BackendSiteSettings } from "@/lib/api";
 
-/**
- * Footer Component
- * 
- * Struktur sesuai design reference:
- * - Column 1: Logo + Alamat lengkap
- * - Column 2: PAGES links
- * - Column 3: DOWNLOAD links
- * - Column 4: SOCIAL MEDIA icons
- * 
- * Background: Primary color (#255D74)
- */
-
 const Footer = () => {
     const [settings, setSettings] = useState<BackendSiteSettings | null>(null);
 
@@ -54,9 +42,9 @@ const Footer = () => {
     const socialLinks = settings ? [
         { href: settings.instagram_url, icon: "instagram", label: "Instagram" },
         { href: settings.linkedin_url, icon: "linkedin", label: "LinkedIn" },
-        { href: `mailto:${settings.email}`, icon: "email", label: "Email" },
-        { href: `https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`, icon: "whatsapp", label: "WhatsApp" },
-        { href: `tel:${settings.phone}`, icon: "phone", label: "Phone" },
+        { href: settings.email ? `mailto:${settings.email}` : "", icon: "email", label: "Email" },
+        { href: settings.whatsapp ? `https://wa.me/${settings.whatsapp.replace(/\D/g, '')}` : "", icon: "whatsapp", label: "WhatsApp" },
+        { href: settings.phone ? `tel:${settings.phone}` : "", icon: "phone", label: "Phone" },
     ].filter(link => link.href && link.href !== "mailto:" && link.href !== "https://wa.me/" && link.href !== "tel:") : [];
 
     return (

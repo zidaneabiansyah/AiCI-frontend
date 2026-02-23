@@ -48,13 +48,13 @@ export function useAuth() {
             clearAuth();
             queryClient.clear();
             toast.success('Logout berhasil!');
-            router.push('/login');
+            router.push('/');
         },
         onError: () => {
             // Even if API fails, clear local auth
             clearAuth();
             queryClient.clear();
-            router.push('/login');
+            router.push('/');
         },
     });
 
