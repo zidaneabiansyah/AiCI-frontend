@@ -79,6 +79,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
 export default function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     const editor = useEditor({
+        immediatelyRender: false,
         extensions: [
             StarterKit,
             Underline,
