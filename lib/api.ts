@@ -282,6 +282,11 @@ export const enrollmentsApi = {
     }),
 };
 
+// User Analytics API
+export const userAnalyticsApi = {
+    me: () => fetcher<{ data: any }>('/v1/analytics/me'),
+};
+
 // Payments API
 export const paymentsApi = {
     create: (enrollmentId: string) => fetcher<{ data: { payment_id: string; xendit_invoice_url: string } }>(`/v1/payments/create/${enrollmentId}`, {
