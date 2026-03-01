@@ -8,30 +8,35 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
+import { useAuthStore } from '@/lib/store/auth-store';
 import Link from 'next/link';
-import { Home, FileText, BookOpen, CreditCard, User, LogOut, Menu, X, Loader2 } from 'lucide-react';
+import { Home, FileText, BookOpen, CreditCard, User, LogOut, Menu, X, Loader2, BarChart3 } from 'lucide-react';
 
 const menuItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Test Saya', href: '/dashboard/tests', icon: FileText },
-    { name: 'Pendaftaran', href: '/dashboard/enrollments', icon: BookOpen },
-    { name: 'Pembayaran', href: '/dashboard/payments', icon: CreditCard },
-    { name: 'Profil', href: '/dashboard/profile', icon: User },
+    { name: 'Dashboard',   href: '/dashboard',            icon: Home       },
+    { name: 'Analitik',    href: '/dashboard/analytics',  icon: BarChart3  },
+    { name: 'Test Saya',   href: '/dashboard/tests',      icon: FileText   },
+    { name: 'Pendaftaran', href: '/dashboard/enrollments', icon: BookOpen  },
+    { name: 'Pembayaran',  href: '/dashboard/payments',   icon: CreditCard },
+    { name: 'Profil',      href: '/dashboard/profile',    icon: User       },
 ];
+
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
     const { user, isAuthenticated, logout, isLoading } = useAuth();
+    const _hasHydrated = useAuthStore((s) => s._hasHydrated);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
+        if (!_hasHydrated) return;
         if (!isLoading && !isAuthenticated) {
             router.push('/login');
         }
-    }, [isAuthenticated, isLoading, router]);
+    }, [_hasHydrated, isAuthenticated, isLoading, router]);
 
-    if (isLoading || !isAuthenticated) {
+    if (!_hasHydrated || isLoading || !isAuthenticated) {
         return (
             <div className="min-h-screen bg-[#eef2f5] flex items-center justify-center">
                 <Loader2 className="w-12 h-12 animate-spin text-[#255d74]" />

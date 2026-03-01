@@ -282,6 +282,11 @@ export const enrollmentsApi = {
     }),
 };
 
+// User Analytics API
+export const userAnalyticsApi = {
+    me: () => fetcher<{ data: any }>('/v1/analytics/me'),
+};
+
 // Payments API
 export const paymentsApi = {
     create: (enrollmentId: string) => fetcher<{ data: { payment_id: string; xendit_invoice_url: string } }>(`/v1/payments/create/${enrollmentId}`, {
@@ -294,11 +299,11 @@ export const paymentsApi = {
 
 // Auth API (Sanctum)
 export const authApi = {
-    register: (data: any) => fetcher<{ data: any }>('/v1/auth/register', {
+    register: (data: any) => fetcher<{ data: { user: any; access_token: string; token?: string } }>('/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
     }),
-    login: (credentials: any) => fetcher<{ data: { user: any; token: string } }>('/v1/auth/login', {
+    login: (credentials: any) => fetcher<{ data: { user: any; access_token: string; token?: string } }>('/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
     }),
