@@ -19,7 +19,8 @@ export function useAuth() {
     const loginMutation = useMutation({
         mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
         onSuccess: (response) => {
-            setAuth(response.data.user, response.data.token);
+            const token = (response.data.access_token || response.data.token) as string;
+            setAuth(response.data.user, token);
             toast.success('Login berhasil!');
             router.push('/dashboard');
         },
@@ -32,7 +33,8 @@ export function useAuth() {
     const registerMutation = useMutation({
         mutationFn: (data: RegisterData) => authApi.register(data),
         onSuccess: (response) => {
-            setAuth(response.data.user, response.data.token);
+            const token = (response.data.access_token || response.data.token) as string;
+            setAuth(response.data.user, token);
             toast.success('Registrasi berhasil! Selamat datang!');
             router.push('/dashboard');
         },
@@ -51,20 +53,20 @@ export function useAuth() {
             router.push('/');
         },
         onError: () => {
-            // Even if API fails, clear local auth
             clearAuth();
             queryClient.clear();
             router.push('/');
         },
     });
 
-    // Fetch current user
+    // Fetch current user to keep session alive and get the latest profile data
     const { data: currentUser, isLoading: isLoadingUser } = useQuery({
         queryKey: ['auth', 'me'],
         queryFn: () => authApi.me(),
         enabled: isAuthenticated && !!token,
         retry: false,
         staleTime: Infinity,
+        throwOnError: false,
     });
 
     return {

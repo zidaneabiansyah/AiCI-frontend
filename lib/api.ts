@@ -294,11 +294,11 @@ export const paymentsApi = {
 
 // Auth API (Sanctum)
 export const authApi = {
-    register: (data: any) => fetcher<{ data: any }>('/v1/auth/register', {
+    register: (data: any) => fetcher<{ data: { user: any; access_token: string; token?: string } }>('/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
     }),
-    login: (credentials: any) => fetcher<{ data: { user: any; token: string } }>('/v1/auth/login', {
+    login: (credentials: any) => fetcher<{ data: { user: any; access_token: string; token?: string } }>('/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
     }),
