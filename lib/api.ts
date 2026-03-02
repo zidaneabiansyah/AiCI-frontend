@@ -287,6 +287,17 @@ export const userAnalyticsApi = {
     me: () => fetcher<{ data: any }>('/v1/analytics/me'),
 };
 
+// Certificates API (User)
+export const certificatesApi = {
+    list: () => fetcher<{ certificates: any[] }>('/v1/certificates'),
+    show: (certificateId: string) => fetcher<{ certificate: any }>(`/v1/certificates/${certificateId}`),
+    download: (certificateId: string) => `${BASE_URL}/v1/certificates/${certificateId}/download`,
+    verify: (certificateNumber: string) => fetcher<{ certificate: any; is_valid: boolean }>('/v1/certificates/verify', {
+        method: 'POST',
+        body: JSON.stringify({ certificate_number: certificateNumber }),
+    }),
+};
+
 // Payments API
 export const paymentsApi = {
     create: (enrollmentId: string) => fetcher<{ data: { payment_id: string; xendit_invoice_url: string } }>(`/v1/payments/create/${enrollmentId}`, {
@@ -380,6 +391,20 @@ export const api = {
             create: (data: any) => fetcher<any>('/v1/admin/schedules', { method: 'POST', body: JSON.stringify(data) }),
             update: (id: string, data: any) => fetcher<any>(`/v1/admin/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
             delete: (id: string) => fetcher<any>(`/v1/admin/schedules/${id}`, { method: 'DELETE' }),
+        },
+        // Certificates Management
+        certificates: {
+            list: (params?: string) => fetcher<any>(`/v1/admin/certificates${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/v1/admin/certificates/${id}`),
+            statistics: () => fetcher<any>('/v1/admin/certificates/statistics'),
+            eligibleEnrollments: (params?: string) => fetcher<any>(`/v1/admin/certificates/eligible-enrollments${params ? `?${params}` : ''}`),
+            issue: (data: any) => fetcher<any>('/v1/admin/certificates', { method: 'POST', body: JSON.stringify(data) }),
+            revoke: (id: string, reason: string) => fetcher<any>(`/v1/admin/certificates/${id}/revoke`, {
+                method: 'POST',
+                body: JSON.stringify({ reason }),
+            }),
+            regenerate: (id: string) => fetcher<any>(`/v1/admin/certificates/${id}/regenerate`, { method: 'POST' }),
+            delete: (id: string) => fetcher<any>(`/v1/admin/certificates/${id}`, { method: 'DELETE' }),
         },
         // Analytics
         analytics: {
