@@ -9,12 +9,13 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
 import Link from 'next/link';
-import { Home, FileText, BookOpen, CreditCard, User, LogOut, Menu, X, Loader2 } from 'lucide-react';
+import { Home, FileText, BookOpen, CreditCard, User, LogOut, Menu, X, Loader2, Box } from 'lucide-react';
 
 const menuItems = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Test Saya', href: '/dashboard/tests', icon: FileText },
     { name: 'Pendaftaran', href: '/dashboard/enrollments', icon: BookOpen },
+    { name: 'Modul 3D', href: '/dashboard/learning', icon: Box },
     { name: 'Pembayaran', href: '/dashboard/payments', icon: CreditCard },
     { name: 'Profil', href: '/dashboard/profile', icon: User },
 ];
@@ -22,16 +23,17 @@ const menuItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, isAuthenticated, logout, isLoading } = useAuth();
+    const { user, isAuthenticated, isHydrated, logout } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.push('/login');
+        if (!isHydrated) return;
+        if (!isAuthenticated) {
+            router.replace('/login');
         }
-    }, [isAuthenticated, isLoading, router]);
+    }, [isAuthenticated, isHydrated, router]);
 
-    if (isLoading || !isAuthenticated) {
+    if (!isHydrated || !isAuthenticated) {
         return (
             <div className="min-h-screen bg-[#eef2f5] flex items-center justify-center">
                 <Loader2 className="w-12 h-12 animate-spin text-[#255d74]" />
