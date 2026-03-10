@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { authApi } from '@/lib/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import toast from 'react-hot-toast';
 import type { LoginCredentials, RegisterData, User } from '@/lib/types/auth';
 
@@ -177,13 +178,14 @@ export function useAuth() {
         enabled: shouldFetchCurrentUser,
         retry: false,
         staleTime: 1000 * 60 * 5,
-        onSuccess: (response) => {
-            const profile = resolveUserPayload(response);
-            if (profile) {
-                updateUser(profile);
-            }
-        },
     });
+
+    useEffect(() => {
+        const profile = resolveUserPayload(currentUser);
+        if (profile) {
+            updateUser(profile);
+        }
+    }, [currentUser, updateUser]);
 
     const resolvedCurrentUser = resolveUserPayload(currentUser);
 
