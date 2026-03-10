@@ -46,11 +46,11 @@ export default function AdminDashboard() {
                 
                 setStats({
                     totalPrograms: programsData?.data?.length ?? 0,
-                    totalTestimonials: testimonialsData?.data?.length ?? 0,
-                    totalPartners: partnersData?.data?.length ?? 0,
-                    totalFacilities: facilitiesData?.data?.length ?? 0,
-                    totalTeam: teamData?.data?.length ?? 0,
-                    totalGallery: galleryData?.data?.length ?? 0,
+                    totalTestimonials: testimonialsData?.results?.length ?? 0,
+                    totalPartners: partnersData?.results?.length ?? 0,
+                    totalFacilities: facilitiesData?.results?.length ?? 0,
+                    totalTeam: teamData?.results?.length ?? 0,
+                    totalGallery: galleryData?.results?.length ?? 0,
                     totalArticles: articlesData?.results?.length ?? 0,
                     totalPages: Array.isArray(pagesData?.results ?? pagesData)
                         ? (pagesData?.results ?? pagesData).length
