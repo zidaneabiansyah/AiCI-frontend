@@ -85,9 +85,9 @@ function getErrorMessage(error: unknown, fallback: string): string {
 export function useAuth() {
     const router = useRouter();
     const queryClient = useQueryClient();
-    const { user, token, isAuthenticated, isHydrated, setAuth, clearAuth, updateUser } = useAuthStore();
+    const { user, token, isAuthenticated, _hasHydrated, setAuth, clearAuth, updateUser } = useAuthStore();
     const safeToken = token && token !== 'undefined' && token !== 'null' ? token : null;
-    const hasSession = isHydrated && isAuthenticated && !!safeToken;
+    const hasSession = _hasHydrated && isAuthenticated && !!safeToken;
     const shouldFetchCurrentUser = hasSession && !user;
 
     // Login mutation
@@ -156,7 +156,7 @@ export function useAuth() {
     return {
         user: resolvedCurrentUser || user,
         token: safeToken,
-        isHydrated,
+        isHydrated: _hasHydrated,
         isAuthenticated: hasSession,
         isLoading: loginMutation.isPending || registerMutation.isPending,
         login: loginMutation.mutate,

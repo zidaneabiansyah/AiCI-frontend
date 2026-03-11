@@ -19,10 +19,10 @@ export interface BackendPartner {
 }
 
 export interface BackendFacility {
-    id: string;
-    category: 'RUANGAN' | 'MODUL' | 'MEDIA_KIT' | 'ROBOT';
     category_display: string;
-    title: string;
+    id: string;
+    type: 'RUANGAN' | 'MODUL' | 'MEDIA_KIT' | 'ROBOT';
+    name: string;
     description: string;
     image: string;
     order: number;
@@ -106,6 +106,14 @@ export interface PaginatedResponse<T> {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+export function getImageUrl(path: string | null | undefined): string {
+    if (!path) return '/placeholder-image.jpg';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
+        return path;
+    }
+    return `/${path}`;
+}
 
 const PUBLIC_ENDPOINTS = [
     '/v1/content/testimonials',
@@ -474,18 +482,18 @@ export const api = {
     // Note: ContentController returns { success, results } format
     content: {
         // Testimonials
-        testimonials: () => fetcher<{
-            success: boolean; results: BackendTestimonial[]
-        }>('/v1/content/testimonials'),
+        testimonials: () =>
+            fetcher<{ success: boolean; results: BackendTestimonial[] }>('/v1/content/testimonials')
+                .then(r => r.results ?? []),
         createTestimonial: (data: FormData) => fetcher<any>('/v1/admin/content/testimonials', { method: 'POST', body: data }),
         updateTestimonial: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'PATCH', body: data }),
         reorderTestimonials: (ids: string[]) => fetcher<any>('/v1/admin/content/testimonials/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
         deleteTestimonial: (id: string) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'DELETE' }),
 
         // Partners
-        partners: () => fetcher<{
-            success: boolean; results: BackendPartner[]
-        }>('/v1/content/partners'),
+        partners: () =>
+            fetcher<{ success: boolean; results: BackendPartner[] }>('/v1/content/partners')
+                .then(r => r.results ?? []),
         createPartner: (data: FormData) => fetcher<any>('/v1/admin/content/partners', { method: 'POST', body: data }),
         updatePartner: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'PATCH', body: data }),
         reorderPartners: (ids: string[]) => fetcher<any>('/v1/admin/content/partners/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
@@ -496,9 +504,9 @@ export const api = {
         updateSettings: (data: any) => fetcher<any>('/v1/admin/content/settings', { method: 'PATCH', body: JSON.stringify(data) }),
 
         // Team
-        team: (roleType?: string) => fetcher<{
-            success: boolean; results: BackendTeamMember[]
-        }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`),
+        team: (roleType?: string) =>
+            fetcher<{ success: boolean; results: BackendTeamMember[] }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`)
+                .then(r => r.results ?? []),
         createTeamMember: (data: FormData) => fetcher<any>('/v1/admin/content/team', { method: 'POST', body: data }),
         updateTeamMember: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'PATCH', body: data }),
         reorderTeamMembers: (ids: string[]) => fetcher<any>('/v1/admin/content/team/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
@@ -526,9 +534,10 @@ export const api = {
         deleteArticle: (slug: string) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'DELETE' }),
 
         // Facilities
-        facilities: (category?: string) => fetcher<{
-            success: boolean; results: BackendFacility[]
-        }>(`/v1/admin/facilities${category ? `?category=${category}` : ''}`),
+        facilities: (category?: string) =>
+            fetcher<{ success: boolean; results: BackendFacility[] }>(
+                `/v1/admin/facilities${category ? `?category=${category}` : ''}`
+            ).then(r => r.results ?? []),
         createFacility: (data: FormData) => fetcher<any>('/v1/admin/facilities', { method: 'POST', body: data }),
         updateFacility: (id: string, data: FormData) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'PATCH', body: data }),
         reorderFacilities: (ids: string[]) => fetcher<any>('/v1/admin/facilities/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
