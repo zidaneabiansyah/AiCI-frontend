@@ -30,7 +30,7 @@ export default function AdminDashboard() {
                     programsData, testimonialsData, partnersData, facilitiesData,
                     teamData, galleryData, articlesData, pagesData
                 ] = await Promise.all([
-                    api.content.programs(),
+                    api.programs.list(),
                     api.content.testimonials(),
                     api.content.partners(),
                     api.content.facilities(),
@@ -41,20 +41,18 @@ export default function AdminDashboard() {
                 ]);
 
                 // Get recent articles
-                const articles = articlesData.results;
+                const articles = articlesData.results || [];
                 setRecentArticles(articles.slice(0, 5));
                 
                 setStats({
-                    totalPrograms: programsData?.data?.length ?? 0,
-                    totalTestimonials: testimonialsData?.results?.length ?? 0,
-                    totalPartners: partnersData?.results?.length ?? 0,
-                    totalFacilities: facilitiesData?.results?.length ?? 0,
-                    totalTeam: teamData?.results?.length ?? 0,
-                    totalGallery: galleryData?.results?.length ?? 0,
-                    totalArticles: articlesData?.results?.length ?? 0,
-                    totalPages: Array.isArray(pagesData?.results ?? pagesData)
-                        ? (pagesData?.results ?? pagesData).length
-                        : 0,
+                    totalPrograms: programsData.data.length,
+                    totalTestimonials: testimonialsData.results.length,
+                    totalPartners: partnersData.results.length,
+                    totalFacilities: facilitiesData.results.length,
+                    totalTeam: teamData.results.length,
+                    totalGallery: galleryData.results.length,
+                    totalArticles: articles.length,
+                    totalPages: (pagesData.data || []).length,
                 });
             } catch (err) {
                 console.error("Failed to load dashboard data:", err);
@@ -315,13 +313,13 @@ export default function AdminDashboard() {
                                         <td className="px-10 py-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0">
-                                                    <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                                                    <img src={article.featured_image ?? undefined} alt="" className="w-full h-full object-cover" />
                                                 </div>
                                                 <span className="font-bold text-primary group-hover:text-secondary transition-colors truncate max-w-50">{article.title}</span>
                                             </div>
                                         </td>
                                         <td className="px-10 py-6">
-                                            <span className="text-primary/60 font-medium">{article.author}</span>
+                                            <span className="text-primary/60 font-medium">-</span>
                                         </td>
                                         <td className="px-10 py-6 text-sm text-primary/40 font-bold">
                                             {new Date(article.created_at).toLocaleDateString()}

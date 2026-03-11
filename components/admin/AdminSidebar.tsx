@@ -100,6 +100,11 @@ const menuItems = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
     ), section: "student" },
+    { name: "Certificates", href: "/admin/certificates", icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+        </svg>
+    ), section: "student" },
 ];
 
 interface AdminSidebarProps {
@@ -134,7 +139,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const logout = () => {
         localStorage.removeItem("aici_token");
         localStorage.removeItem("aici_refresh");
-        router.push("/admin/login");
+        router.push("/");
     };
 
     return (
@@ -150,7 +155,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
                         </div>
                         {isOpen && (
                             <div className="animate-in fade-in slide-in-from-left-2 duration-300">
-                                <span className="text-xl font-bold text-primary tracking-tight block leading-none">Showcase</span>
+                                <span className="text-xl font-bold text-primary tracking-tight block leading-none">Admin</span>
                                 <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Dashboard</span>
                             </div>
                         )}
@@ -173,7 +178,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             </div>
 
             {/* Menu Sections */}
-            <div className="flex-1 space-y-2 overflow-hidden">
+            <div className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden pr-2 -mr-2 scrollbar-none hover:scrollbar-thin scrollbar-thumb-gray-200">
                 {/* Main Navigation */}
                 <p className={`text-[10px] font-bold text-primary/30 uppercase tracking-[0.2em] mb-4 transition-all duration-300 ${isOpen ? "ml-4 opacity-100" : "opacity-0 h-0 overflow-hidden"}`}>
                     Main Navigation
@@ -272,11 +277,11 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             <div className={`mt-auto pt-8 border-t border-gray-50 space-y-4 ${!isOpen && "flex flex-col items-center"}`}>
                 <div className={`flex items-center transition-all ${isOpen ? "gap-4 px-2" : "justify-center"}`}>
                     <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-secondary/10 shrink-0">
-                        {user ? user.username.substring(0, 2).toUpperCase() : "AD"}
+                        {user?.name ? user.name.substring(0, 2).toUpperCase() : "AD"}
                     </div>
                     {isOpen && (
                         <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-300">
-                            <span className="text-primary font-bold text-sm truncate max-w-35">{user ? user.username : "Administrator"}</span>
+                            <span className="text-primary font-bold text-sm truncate max-w-35">{user?.name || "Administrator"}</span>
                             <span className="text-primary/40 text-[10px] font-bold uppercase tracking-wider">Super Admin</span>
                         </div>
                     )}

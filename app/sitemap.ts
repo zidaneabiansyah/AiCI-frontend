@@ -17,9 +17,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     try {
         // Fetch all dynamic content for indexing
-        const articles = await api.content.articles();
+        const articlesRes = await api.articles.list();
 
-        const articleRoutes: MetadataRoute.Sitemap = articles.results.map((article: any) => ({
+        const articleRoutes: MetadataRoute.Sitemap = articlesRes.data.map((article) => ({
             url: `${BASE_URL}/artikel/${article.slug}`,
             lastModified: new Date(article.published_at || article.created_at),
             changeFrequency: 'monthly',

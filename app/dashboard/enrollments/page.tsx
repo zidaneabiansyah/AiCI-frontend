@@ -12,7 +12,12 @@ export default function DashboardEnrollmentsPage() {
         queryFn: () => enrollmentsApi.list(),
     });
 
-    const enrollments = data?.data || [];
+    const rawData: any = data?.data;
+    const enrollments: any[] = Array.isArray(rawData)
+        ? rawData
+        : Array.isArray(rawData?.results)
+        ? rawData.results
+        : [];
 
     const statusColors: Record<string, string> = {
         pending: 'bg-yellow-100 text-yellow-600',

@@ -18,7 +18,12 @@ export default function DashboardPage() {
         queryFn: () => enrollmentsApi.list(),
     });
 
-    const enrollments = enrollmentsData?.data || [];
+    const rawData: any = enrollmentsData?.data;
+    const enrollments: any[] = Array.isArray(rawData)
+        ? rawData
+        : Array.isArray(rawData?.results)
+        ? rawData.results
+        : [];
     const pendingEnrollments = enrollments.filter((e: any) => e.status === 'pending').length;
     const confirmedEnrollments = enrollments.filter((e: any) => e.status === 'confirmed').length;
 

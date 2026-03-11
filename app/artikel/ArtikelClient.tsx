@@ -19,9 +19,9 @@ import Skeleton, { ImageSkeleton } from "@/components/ui/Skeleton";
  * - Pagination belum diimplementasikan sepenuhnya (hanya show page 1)
  */
 
-export default function ArtikelPage() {
-    const [articles, setArticles] = useState<BackendArticle[]>([]);
-    const [loading, setLoading] = useState(true);
+export default function ArtikelPage({ initialData }: { initialData?: { data: BackendArticle[]; pagination: unknown } }) {
+    const [articles, setArticles] = useState<BackendArticle[]>(initialData?.data ?? []);
+    const [loading, setLoading] = useState(!initialData);
     const [nextPage, setNextPage] = useState<string | null>(null);
     const [prevPage, setPrevPage] = useState<string | null>(null);
 
@@ -29,15 +29,15 @@ export default function ArtikelPage() {
         setLoading(true);
         // Scroll to top of grid
         if (typeof window !== 'undefined' && params) {
-             const grid = document.getElementById('articles-grid');
-             if (grid) grid.scrollIntoView({ behavior: 'smooth' });
+            const grid = document.getElementById('articles-grid');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth' });
         }
         
         try {
-            const res = await api.content.articles(params);
-            setArticles(res.results);
-            setNextPage(res.next);
-            setPrevPage(res.previous);
+            const res = await api.articles.list(params);
+            setArticles(res.data);
+            setNextPage(null);
+            setPrevPage(null);
         } catch (err) {
             console.error("Failed to fetch articles", err);
         } finally {
@@ -46,7 +46,12 @@ export default function ArtikelPage() {
     };
 
     useEffect(() => {
+        // Skip the fetch if initial data was provided by the Server Component (ISR)
+        if (initialData?.data && initialData.data.length > 0) {
+            return;
+        }
         fetchArticles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handlePageChange = (url: string) => {
@@ -125,7 +130,7 @@ export default function ArtikelPage() {
                                     {/* Thumbnail */}
                                     <div className="relative aspect-video bg-gray-200">
                                         <Image
-                                            src={article.thumbnail || '/placeholder-image.jpg'}
+                                            src={article.featured_image || '/placeholder-image.jpg'}
                                             alt={article.title}
                                             fill
                                             className="object-cover transition-none"

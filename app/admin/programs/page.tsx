@@ -25,9 +25,10 @@ import { CSS } from '@dnd-kit/utilities';
 interface SortableItemProps {
     program: BackendProgram;
     onEdit: (program: BackendProgram) => void;
+    onDelete: (id: string) => void;
 }
 
-function SortableProgramCard({ program, onEdit }: SortableItemProps) {
+function SortableProgramCard({ program, onEdit, onDelete }: SortableItemProps) {
     const {
         attributes,
         listeners,
@@ -43,6 +44,13 @@ function SortableProgramCard({ program, onEdit }: SortableItemProps) {
         opacity: isDragging ? 0.5 : 1,
     };
 
+    const firstImage = program.images && program.images.length > 0 ? program.images[0] : null;
+    const imageUrl = firstImage
+        ? firstImage.startsWith('http')
+            ? firstImage
+            : `${process.env.NEXT_PUBLIC_BACKEND_URL}/storage/${firstImage}`
+        : "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=2070";
+
     return (
         <div
             ref={setNodeRef}
@@ -52,10 +60,11 @@ function SortableProgramCard({ program, onEdit }: SortableItemProps) {
             {/* Image */}
             <div className="relative h-48 overflow-hidden">
                 <Image
-                    src={program.image || "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=2070"}
-                    alt={program.title}
+                    src={imageUrl}
+                    alt={program.name}
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    unoptimized={!imageUrl.startsWith('http')}
                 />
                 {/* Drag Handle Overlay */}
                 <button
@@ -68,26 +77,47 @@ function SortableProgramCard({ program, onEdit }: SortableItemProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                     </svg>
                 </button>
+
+                {/* Active badge */}
+                {!program.is_active && (
+                    <div className="absolute top-4 right-4 px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-lg">
+                        Inactive
+                    </div>
+                )}
             </div>
 
             {/* Content */}
-            <div className="p-8">
-                <h4 className="font-bold text-primary text-xl mb-3 line-clamp-1 group-hover:text-secondary transition-colors">
-                    {program.title}
+            <div className="p-6">
+
+                <h4 className="font-bold text-primary text-xl mb-2 line-clamp-1 group-hover:text-secondary transition-colors">
+                    {program.name}
                 </h4>
-                <p className="text-primary/60 text-sm leading-relaxed line-clamp-3 mb-6">
-                    {program.description}
+                <p className="text-primary/60 text-sm leading-relaxed line-clamp-2 mb-4">
+                    {program.description || 'No description'}
                 </p>
-                <button
-                    onClick={() => onEdit(program)}
-                    className="w-full bg-gray-50 text-primary font-bold py-3 rounded-xl hover:bg-primary hover:text-white transition-all text-xs uppercase tracking-widest"
-                >
-                    Edit Program
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => onEdit(program)}
+                        className="flex-1 bg-gray-50 text-primary font-bold py-2.5 rounded-xl hover:bg-primary hover:text-white transition-all text-xs uppercase tracking-widest"
+                    >
+                        Edit
+                    </button>
+                    <button
+                        onClick={() => onDelete(program.id)}
+                        className="px-4 bg-red-50 text-red-500 font-bold py-2.5 rounded-xl hover:bg-red-500 hover:text-white transition-all text-xs"
+                    >
+                        Delete
+                    </button>
+                </div>
             </div>
         </div>
     );
 }
+
+// ─────────────────────────────────────────────────────────────
+// Education levels used in the form
+// ─────────────────────────────────────────────────────────────
+const EDUCATION_LEVELS = ['SD', 'SMP', 'SMA', 'Umum', 'Semua'];
 
 export default function AdminProgramsPage() {
     const [programs, setPrograms] = useState<BackendProgram[]>([]);
@@ -96,27 +126,28 @@ export default function AdminProgramsPage() {
     const [editingProgram, setEditingProgram] = useState<BackendProgram | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Form state
-    const [title, setTitle] = useState("");
+    // Form state — matches DB field names
+    const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState("");
+    const [brochureUrl, setBrochureUrl] = useState("");
+    const [isActive, setIsActive] = useState(true);
+    const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [deletedImages, setDeletedImages] = useState<string[]>([]);
+    const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+    const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Drag and drop sensors
     const sensors = useSensors(
         useSensor(PointerSensor),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
     const loadPrograms = async () => {
         setIsLoading(true);
         try {
             const data = await api.content.programs();
-            setPrograms(data.data ?? []);
+            setPrograms(data.results || []);
         } catch (err) {
             console.error("Failed to load programs:", err);
             toast.error("Failed to load programs");
@@ -125,27 +156,21 @@ export default function AdminProgramsPage() {
         }
     };
 
-    useEffect(() => {
-        loadPrograms();
-    }, []);
+    useEffect(() => { loadPrograms(); }, []);
 
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
-
         if (over && active.id !== over.id) {
-            const oldIndex = programs.findIndex((p) => p.id === active.id);
-            const newIndex = programs.findIndex((p) => p.id === over.id);
-
+            const oldIndex = programs.findIndex(p => p.id === active.id);
+            const newIndex = programs.findIndex(p => p.id === over.id);
             const newOrder = arrayMove(programs, oldIndex, newIndex);
             setPrograms(newOrder);
-
-            // Save new order to backend
             try {
                 await api.content.reorderPrograms(newOrder.map(p => p.id));
                 toast.success("Order updated");
             } catch {
                 toast.error("Failed to update order");
-                loadPrograms(); // Revert on error
+                loadPrograms();
             }
         }
     };
@@ -153,9 +178,14 @@ export default function AdminProgramsPage() {
     const openModal = (program?: BackendProgram) => {
         if (program) {
             setEditingProgram(program);
-            setTitle(program.title);
-            setDescription(program.description);
-            setImagePreview(program.image);
+            setName(program.name);
+            setDescription(program.description || "");
+            setBrochureUrl(program.brochure_url || "");
+            setIsActive(program.is_active);
+            setExistingImages(program.images || []);
+            setDeletedImages([]);
+            setNewImageFiles([]);
+            setNewImagePreviews([]);
         } else {
             resetForm();
         }
@@ -164,28 +194,52 @@ export default function AdminProgramsPage() {
 
     const resetForm = () => {
         setEditingProgram(null);
-        setTitle("");
+        setName("");
         setDescription("");
-        setImageFile(null);
-        setImagePreview("");
+        setBrochureUrl("");
+        setIsActive(true);
+        setExistingImages([]);
+        setDeletedImages([]);
+        setNewImageFiles([]);
+        setNewImagePreviews([]);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            // Validate file size (max 3MB)
-            if (file.size > 3 * 1024 * 1024) {
-                toast.error("Image size must be less than 3MB");
-                return;
-            }
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
 
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+        const totalImages = existingImages.length + newImageFiles.length + files.length;
+        if (totalImages > 3) {
+            toast.error("Maximum 3 images allowed");
+            return;
         }
+
+        const validFiles = files.filter(f => f.size <= 3 * 1024 * 1024);
+        if (validFiles.length < files.length) {
+            toast.error("Some images were larger than 3MB and skipped");
+        }
+
+        if (validFiles.length) {
+            setNewImageFiles(prev => [...prev, ...validFiles]);
+            
+            validFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setNewImagePreviews(prev => [...prev, reader.result as string]);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+
+    const handleRemoveExistingImage = (img: string) => {
+        setExistingImages(prev => prev.filter(i => i !== img));
+        setDeletedImages(prev => [...prev, img]);
+    };
+
+    const handleRemoveNewImage = (index: number) => {
+        setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+        setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -193,26 +247,43 @@ export default function AdminProgramsPage() {
         setIsSaving(true);
 
         const formData = new FormData();
-        formData.append("title", title);
-        formData.append("description", description);
-        if (imageFile) formData.append("image", imageFile);
+        formData.append("name", name);
+        if (description) formData.append("description", description);
+        if (brochureUrl) formData.append("brochure_url", brochureUrl);
+        formData.append("is_active", isActive ? "1" : "0");
+        
+        newImageFiles.forEach(file => { formData.append("images[]", file); });
+        deletedImages.forEach(img => { formData.append("deleted_images[]", img); });
 
         try {
             if (editingProgram) {
-                // Note: Backend might not have update endpoint, check api.ts
-                toast("Update functionality pending backend support", { icon: 'ℹ️' });
+                await api.content.updateProgram(editingProgram.id, formData);
+                toast.success("Program updated successfully!");
             } else {
-                // Note: Backend might not have create endpoint, check api.ts
-                toast("Create functionality pending backend support", { icon: 'ℹ️' });
+                await api.content.createProgram(formData);
+                toast.success("Program created successfully!");
             }
             setIsModalOpen(false);
             resetForm();
             loadPrograms();
-        } catch (err) {
-            const message = err instanceof Error ? err.message : "Failed to save program";
-            toast.error(message);
+        } catch (err: any) {
+            const msg = err?.data?.errors
+                ? Object.values(err.data.errors).flat().join(', ')
+                : err.message || "Failed to save program";
+            toast.error(msg);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Delete this program? This action cannot be undone.")) return;
+        try {
+            await api.content.deleteProgram(id);
+            toast.success("Program deleted");
+            loadPrograms();
+        } catch {
+            toast.error("Failed to delete program");
         }
     };
 
@@ -249,21 +320,15 @@ export default function AdminProgramsPage() {
                     <p className="text-primary/60">Add your first program to get started</p>
                 </div>
             ) : (
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                >
-                    <SortableContext
-                        items={programs.map(p => p.id)}
-                        strategy={rectSortingStrategy}
-                    >
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={programs.map(p => p.id)} strategy={rectSortingStrategy}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {programs.map((program) => (
+                            {programs.map(program => (
                                 <SortableProgramCard
                                     key={program.id}
                                     program={program}
                                     onEdit={openModal}
+                                    onDelete={handleDelete}
                                 />
                             ))}
                         </div>
@@ -277,7 +342,7 @@ export default function AdminProgramsPage() {
                     <div className="min-h-screen flex items-center justify-center p-4">
                         <div className="fixed inset-0 bg-primary/20 backdrop-blur-sm" onClick={() => !isSaving && setIsModalOpen(false)} />
 
-                        <div className="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-10 md:p-12 animate-in fade-in zoom-in duration-300">
+                        <div className="relative bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl p-10 md:p-12 animate-in fade-in zoom-in duration-300 max-h-[95vh] overflow-y-auto">
                             <div className="flex justify-between items-center mb-10">
                                 <h3 className="text-2xl font-bold text-primary">
                                     {editingProgram ? "Edit Program" : "Add Program"}
@@ -293,65 +358,88 @@ export default function AdminProgramsPage() {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-8">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Left Column */}
-                                    <div className="space-y-6">
+                                    <div className="space-y-5">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Program Title</label>
+                                            <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Program Name *</label>
                                             <input
                                                 type="text"
                                                 required
-                                                value={title}
-                                                onChange={(e) => setTitle(e.target.value)}
+                                                value={name}
+                                                onChange={e => setName(e.target.value)}
                                                 disabled={isSaving}
                                                 className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all text-primary font-medium disabled:opacity-50"
                                                 placeholder="AI for Kids"
                                             />
                                         </div>
 
+
                                         <div className="space-y-2">
                                             <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Description</label>
                                             <textarea
-                                                required
                                                 value={description}
-                                                onChange={(e) => setDescription(e.target.value)}
+                                                onChange={e => setDescription(e.target.value)}
                                                 disabled={isSaving}
-                                                rows={10}
-                                                className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-8 py-6 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all text-primary font-medium leading-relaxed disabled:opacity-50"
+                                                rows={4}
+                                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all text-primary font-medium leading-relaxed disabled:opacity-50"
                                                 placeholder="Describe the program objectives and target audience..."
                                             />
                                         </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Brochure URL</label>
+                                            <input type="url" value={brochureUrl} onChange={e => setBrochureUrl(e.target.value)} disabled={isSaving}
+                                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-secondary/20 text-primary font-medium disabled:opacity-50" placeholder="https://example.com/brochure.pdf" />
+                                        </div>
+
+{/* Active toggle */}
+                                        <label className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 cursor-pointer hover:bg-gray-100 transition-all">
+                                            <input
+                                                type="checkbox"
+                                                checked={isActive}
+                                                onChange={e => setIsActive(e.target.checked)}
+                                                disabled={isSaving}
+                                                className="w-5 h-5 rounded text-primary"
+                                            />
+                                            <span className="text-primary font-medium text-sm">✅ Active (visible to public)</span>
+                                        </label>
                                     </div>
 
-                                    {/* Right Column */}
+                                    {/* Right Column — Images */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Program Image (Max 3MB)</label>
-                                        <div
-                                            onClick={() => !isSaving && fileInputRef.current?.click()}
-                                            className="w-full aspect-square bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group"
-                                        >
-                                            {imagePreview ? (
-                                                <Image src={imagePreview} alt="Preview" fill className="object-cover" />
-                                            ) : (
-                                                <div className="text-center space-y-2">
-                                                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
-                                                        <svg className="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                        </svg>
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Program Images (Max 3, Max 3MB/ea)</label>
+                                            <span className="text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{existingImages.length + newImageFiles.length}/3</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 pb-2">
+                                            {existingImages.map((img, i) => (
+                                                <div key={`existing-${i}`} className="relative h-32 bg-gray-50 rounded-2xl border-2 border-gray-100 overflow-hidden group">
+                                                    <Image src={img.startsWith('http') ? img : `${process.env.NEXT_PUBLIC_BACKEND_URL}/storage/${img}`} alt={`Image ${i+1}`} fill className="object-cover" unoptimized />
+                                                    <button type="button" onClick={() => handleRemoveExistingImage(img)} className="absolute top-2 right-2 bg-red-500/80 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm z-10 backdrop-blur-sm">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {newImagePreviews.map((preview, i) => (
+                                                <div key={`new-${i}`} className="relative h-32 bg-gray-50 rounded-2xl border-2 border-gray-100 overflow-hidden group">
+                                                    <Image src={preview} alt={`New image ${i+1}`} fill className="object-cover" unoptimized />
+                                                    <button type="button" onClick={() => handleRemoveNewImage(i)} className="absolute top-2 right-2 bg-red-500/80 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm z-10 backdrop-blur-sm">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {(existingImages.length + newImageFiles.length) < 3 && (
+                                                <div onClick={() => !isSaving && fileInputRef.current?.click()} className="h-32 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 hover:border-secondary transition-all group">
+                                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform mb-2">
+                                                        <svg className="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                                                     </div>
-                                                    <p className="text-[10px] font-bold text-primary/30 uppercase tracking-widest">Upload Image</p>
+                                                    <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest text-center px-2">Add Image</span>
                                                 </div>
                                             )}
-                                            <input
-                                                type="file"
-                                                className="hidden"
-                                                ref={fileInputRef}
-                                                onChange={handleFileChange}
-                                                accept="image/*"
-                                                disabled={isSaving}
-                                            />
                                         </div>
+                                        <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileChange} accept="image/*" disabled={isSaving} />
                                     </div>
                                 </div>
 

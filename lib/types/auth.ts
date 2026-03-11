@@ -27,8 +27,10 @@ export interface RegisterData {
 
 export interface AuthResponse {
   user: User;
-  token: string;
+  access_token: string;
+  token?: string;
 }
+
 
 export interface ForgotPasswordData {
   email: string;

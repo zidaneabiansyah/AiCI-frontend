@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import GoogleTranslate from "./GoogleTranslate";
+import { useAuthStore } from "@/lib/store/auth-store";
 
 /**
  * Navbar Component
@@ -45,6 +46,7 @@ const Navbar = () => {
     const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
     const pathname = usePathname();
+    const { isAuthenticated, user } = useAuthStore();
 
     useEffect(() => {
         const controlNavbar = () => {
@@ -128,9 +130,27 @@ const Navbar = () => {
                     </div>
                 </div>
 
-                {/* Translate Button */}
-                <div className="hidden lg:block relative group">
+                {/* Right Actions: Translate & Login/Profile */}
+                <div className="hidden lg:flex items-center gap-4">
                     <GoogleTranslate />
+                    {isAuthenticated ? (
+                        <Link
+                            href={user?.role === 'admin' ? '/admin' : '/dashboard'}
+                            className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-full pr-4 pl-1.5 py-1.5 transition-all shadow-sm group"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-secondary text-white font-bold text-xs flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                {user?.name ? user.name.substring(0, 2).toUpperCase() : "US"}
+                            </div>
+                            <span className="text-secondary font-bold text-sm truncate max-w-[120px]">{user?.name || "User"}</span>
+                        </Link>
+                    ) : (
+                        <Link
+                            href="/login"
+                            className="bg-secondary text-white px-5 py-2.5 rounded-full text-xs font-bold tracking-widest uppercase hover:bg-[#d42a1e] transition-all shadow-md"
+                        >
+                            Login
+                        </Link>
+                    )}
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -200,6 +220,32 @@ const Navbar = () => {
                         <button className="bg-[#006080] text-white px-5 py-3 text-sm font-bold w-full rounded-sm mt-2">
                             Translate »
                         </button>
+                        
+                        <div className="border-t border-gray-100 pt-4 mt-2">
+                            {isAuthenticated ? (
+                                <Link
+                                    href={user?.role === 'admin' ? '/admin' : '/dashboard'}
+                                    onClick={() => setIsOpen(false)}
+                                    className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-secondary text-white font-bold text-sm flex items-center justify-center">
+                                        {user?.name ? user.name.substring(0, 2).toUpperCase() : "US"}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-secondary font-bold text-base truncate">{user?.name || "User"}</span>
+                                        <span className="text-primary/60 text-xs font-medium uppercase tracking-wider">Ke Dashboard</span>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    onClick={() => setIsOpen(false)}
+                                    className="bg-secondary text-white px-5 py-3 text-sm font-bold w-full rounded-full uppercase tracking-widest text-center mt-2 block shadow-md hover:bg-[#d42a1e] transition-colors"
+                                >
+                                    LOGIN
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

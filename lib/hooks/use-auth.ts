@@ -94,26 +94,8 @@ export function useAuth() {
     const loginMutation = useMutation({
         mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
         onSuccess: (response) => {
-            const authData = extractAuthData(response);
-            const nextUser = resolveUserPayload(authData.user);
-            const nextToken = extractToken(authData);
-
-            if (!nextToken || !nextUser) {
-                toast.error('Login gagal: data sesi tidak lengkap.');
-                return;
-            }
-
-            setAuth(nextUser, nextToken);
-            queryClient.setQueryData(['auth', 'me'], { data: nextUser });
-
-            if (typeof window !== 'undefined') {
-                const refreshToken = extractRefreshToken(authData);
-                if (refreshToken) {
-                    localStorage.setItem('aici_refresh', refreshToken);
-                } else {
-                    localStorage.removeItem('aici_refresh');
-                }
-            }
+            const token = (response.data.access_token || response.data.token) as string;
+            setAuth(response.data.user, token);
             toast.success('Login berhasil!');
             router.replace('/dashboard');
         },
@@ -126,26 +108,8 @@ export function useAuth() {
     const registerMutation = useMutation({
         mutationFn: (data: RegisterData) => authApi.register(data),
         onSuccess: (response) => {
-            const authData = extractAuthData(response);
-            const nextUser = resolveUserPayload(authData.user);
-            const nextToken = extractToken(authData);
-
-            if (!nextToken || !nextUser) {
-                toast.error('Registrasi gagal: data sesi tidak lengkap.');
-                return;
-            }
-
-            setAuth(nextUser, nextToken);
-            queryClient.setQueryData(['auth', 'me'], { data: nextUser });
-
-            if (typeof window !== 'undefined') {
-                const refreshToken = extractRefreshToken(authData);
-                if (refreshToken) {
-                    localStorage.setItem('aici_refresh', refreshToken);
-                } else {
-                    localStorage.removeItem('aici_refresh');
-                }
-            }
+            const token = (response.data.access_token || response.data.token) as string;
+            setAuth(response.data.user, token);
             toast.success('Registrasi berhasil! Selamat datang!');
             router.replace('/dashboard');
         },
@@ -161,23 +125,23 @@ export function useAuth() {
             clearAuth();
             queryClient.clear();
             toast.success('Logout berhasil!');
-            router.replace('/login');
+            router.push('/');
         },
         onError: () => {
-            // Even if API fails, clear local auth
             clearAuth();
             queryClient.clear();
-            router.replace('/login');
+            router.push('/');
         },
     });
 
-    // Fetch current user only when needed (token exists but persisted user missing)
-    const { data: currentUser } = useQuery({
+    // Fetch current user to keep session alive and get the latest profile data
+    const { data: currentUser, isLoading: isLoadingUser } = useQuery({
         queryKey: ['auth', 'me'],
         queryFn: () => authApi.me(),
         enabled: shouldFetchCurrentUser,
         retry: false,
-        staleTime: 1000 * 60 * 5,
+        staleTime: Infinity,
+        throwOnError: false,
     });
 
     useEffect(() => {

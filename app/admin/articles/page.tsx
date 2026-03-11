@@ -19,7 +19,8 @@ export default function AdminArticlesPage() {
     const [slug, setSlug] = useState("");
     const [excerpt, setExcerpt] = useState("");
     const [content, setContent] = useState("");
-    const [author, setAuthor] = useState("");
+    const [category, setCategory] = useState("");
+    const [status, setStatus] = useState<'draft' | 'published' | 'archived'>('draft');
     const [publishedAt, setPublishedAt] = useState("");
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState("");
@@ -31,7 +32,7 @@ export default function AdminArticlesPage() {
         try {
             const params = searchQuery ? `?search=${searchQuery}` : '';
             const data = await api.content.articles(params);
-            setArticles(data.results);
+            setArticles(data.results || []);
         } catch (err) {
             console.error("Failed to load articles:", err);
             toast.error("Failed to load articles");
@@ -56,11 +57,17 @@ export default function AdminArticlesPage() {
             setEditingArticle(article);
             setTitle(article.title);
             setSlug(article.slug);
-            setExcerpt(article.excerpt);
+            setExcerpt(article.excerpt || "");
             setContent(article.content || "");
-            setAuthor(article.author);
+            setCategory(article.category || "");
+            setStatus(article.status || 'draft');
             setPublishedAt(article.published_at || "");
-            setImagePreview(article.thumbnail);
+            const imgUrl = article.featured_image
+                ? article.featured_image.startsWith('http')
+                    ? article.featured_image
+                    : `${process.env.NEXT_PUBLIC_BACKEND_URL}/storage/${article.featured_image}`
+                : "";
+            setImagePreview(imgUrl);
         } else {
             resetForm();
         }
@@ -73,7 +80,8 @@ export default function AdminArticlesPage() {
         setSlug("");
         setExcerpt("");
         setContent("");
-        setAuthor("");
+        setCategory("");
+        setStatus('draft');
         setPublishedAt("");
         setImageFile(null);
         setImagePreview("");
@@ -110,12 +118,12 @@ export default function AdminArticlesPage() {
 
         const formData = new FormData();
         formData.append("title", title);
-        formData.append("slug", slug);
         formData.append("excerpt", excerpt);
         formData.append("content", content);
-        formData.append("author", author);
+        if (category) formData.append("category", category);
+        formData.append("status", status);
         if (publishedAt) formData.append("published_at", publishedAt);
-        if (imageFile) formData.append("thumbnail", imageFile);
+        if (imageFile) formData.append("featured_image", imageFile);
 
         try {
             if (editingArticle) {
@@ -129,7 +137,10 @@ export default function AdminArticlesPage() {
             resetForm();
             loadArticles();
         } catch (err: any) {
-            toast.error(err.message || "Failed to save article");
+            const msg = err?.data?.errors
+                ? Object.values(err.data.errors).flat().join(', ')
+                : err.message || "Failed to save article";
+            toast.error(msg);
         } finally {
             setIsSaving(false);
         }
@@ -216,10 +227,15 @@ export default function AdminArticlesPage() {
                                             <div className="flex items-center gap-6">
                                                 <div className="relative w-20 h-14 rounded-xl overflow-hidden shrink-0 border border-gray-100">
                                                     <Image
-                                                        src={article.thumbnail || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070"}
+                                                        src={article.featured_image
+                                                            ? article.featured_image.startsWith('http')
+                                                                ? article.featured_image
+                                                                : `${process.env.NEXT_PUBLIC_BACKEND_URL}/storage/${article.featured_image}`
+                                                            : "https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=400"}
                                                         alt={article.title}
                                                         fill
                                                         className="object-cover"
+                                                        unoptimized
                                                     />
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
@@ -233,15 +249,17 @@ export default function AdminArticlesPage() {
                                             </div>
                                         </td>
                                         <td className="px-10 py-6">
-                                            <span className="text-primary/60 font-medium">{article.author}</span>
+                                            <span className="text-primary/60 font-medium">{article.category || '—'}</span>
                                         </td>
                                         <td className="px-10 py-6">
                                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                article.published_at
+                                                article.status === 'published'
                                                     ? 'bg-green-100 text-green-600'
-                                                    : 'bg-yellow-100 text-yellow-600'
+                                                    : article.status === 'archived'
+                                                        ? 'bg-gray-100 text-gray-500'
+                                                        : 'bg-yellow-100 text-yellow-600'
                                             }`}>
-                                                {article.published_at ? 'Published' : 'Draft'}
+                                                {article.status || 'draft'}
                                             </span>
                                         </td>
                                         <td className="px-10 py-6 text-sm text-primary/40 font-bold">
@@ -336,19 +354,32 @@ export default function AdminArticlesPage() {
 
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Author</label>
+                                                <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Category</label>
                                                 <input
                                                     type="text"
-                                                    required
-                                                    value={author}
-                                                    onChange={(e) => setAuthor(e.target.value)}
+                                                    value={category}
+                                                    onChange={(e) => setCategory(e.target.value)}
                                                     disabled={isSaving}
                                                     className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all text-primary font-medium disabled:opacity-50"
-                                                    placeholder="John Doe"
+                                                    placeholder="Technology, Education..."
                                                 />
                                             </div>
 
                                             <div className="space-y-2">
+                                                <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Status</label>
+                                                <select
+                                                    value={status}
+                                                    onChange={(e) => setStatus(e.target.value as any)}
+                                                    disabled={isSaving}
+                                                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all text-primary font-medium disabled:opacity-50"
+                                                >
+                                                    <option value="draft">Draft</option>
+                                                    <option value="published">Published</option>
+                                                    <option value="archived">Archived</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="space-y-2 col-span-2">
                                                 <label className="text-xs font-bold text-primary/40 uppercase tracking-widest ml-1">Publish Date (Optional)</label>
                                                 <input
                                                     type="datetime-local"

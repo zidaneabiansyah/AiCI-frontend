@@ -1,3 +1,5 @@
+import { getDedupedRequest, getCacheKey } from './request-dedup';
+
 // Laravel Backend Types
 export interface BackendTestimonial {
     id: string;
@@ -51,20 +53,28 @@ export interface BackendArticle {
     id: string;
     title: string;
     slug: string;
-    excerpt: string;
+    excerpt: string | null;
     content?: string;
-    thumbnail: string;
-    author: string;
+    featured_image: string | null;
+    category: string | null;
+    tags: string[] | string | null;
+    status: 'draft' | 'published' | 'archived';
     published_at: string | null;
     created_at: string;
+    updated_at: string;
 }
 
 export interface BackendProgram {
     id: string;
-    title: string;
-    description: string;
-    image: string;
-    order: number;
+    name: string;
+    slug: string;
+    description: string | null;
+    brochure_url: string | null;
+    images: string[] | null;
+    sort_order: number;
+    is_active: boolean;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 export interface BackendSiteSettings {
@@ -148,6 +158,10 @@ function addRefreshSubscriber(cb: (token: string) => void) {
 export async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const isPublic = isPublicEndpoint(endpoint);
     
+    // For GET requests, use deduplication
+    const method = (options?.method || 'GET').toUpperCase();
+    const shouldDedupe = method === 'GET' && !options?.body;
+    
     const getHeaders = (withAuth = true) => {
         const storedToken = typeof window !== 'undefined' ? localStorage.getItem('aici_token') : null;
         const token =
@@ -160,6 +174,12 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
 
         if (!(options?.body instanceof FormData)) {
             (headers as any)['Content-Type'] = 'application/json';
+        }
+        (headers as any)['Accept'] = 'application/json';
+
+        // Add cache headers for GET requests
+        if (method === 'GET') {
+            (headers as any)['Cache-Control'] = isPublic ? 'public, max-age=300' : 'private, max-age=60';
         }
 
         if (token && withAuth && !isPublic) {
@@ -174,76 +194,79 @@ export async function fetcher<T>(endpoint: string, options?: RequestInit): Promi
             headers: getHeaders(withAuth),
         });
     };
+    
+    // Create the actual fetch function
+    const doFetch = async () => {
+        let res = await attemptFetch(!isPublic);
 
-    let res = await attemptFetch(!isPublic);
+        if (res.status === 401 && !isPublic) {
+            const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('aici_refresh') : null;
 
-    if (res.status === 401 && !isPublic) {
-        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('aici_refresh') : null;
+            if (refreshToken && !isRefreshing) {
+                isRefreshing = true;
+                try {
+                    const refreshRes = await fetch(`${BASE_URL}/v1/auth/refresh`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ refresh: refreshToken }),
+                    });
 
-        if (refreshToken && !isRefreshing) {
-            isRefreshing = true;
-            try {
-                const refreshRes = await fetch(`${BASE_URL}/v1/auth/refresh`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ refresh: refreshToken }),
-                });
-
-                if (refreshRes.ok) {
-                    const data = await refreshRes.json();
-                    const refreshedToken =
-                        data?.access ||
-                        data?.access_token ||
-                        data?.data?.access ||
-                        data?.data?.access_token;
-
-                    if (!refreshedToken) {
-                        throw new Error('Refresh token invalid');
+                    if (refreshRes.ok) {
+                        const data = await refreshRes.json();
+                        localStorage.setItem('aici_token', data.access);
+                        isRefreshing = false;
+                        onTokenRefreshed(data.access);
+                        res = await attemptFetch();
+                    } else {
+                        throw new Error("Refresh failed");
                     }
-
-                    localStorage.setItem('aici_token', refreshedToken);
+                } catch (err) {
                     isRefreshing = false;
-                    onTokenRefreshed(refreshedToken);
-                    res = await attemptFetch();
-                } else {
-                    throw new Error("Refresh failed");
+                    localStorage.removeItem('aici_token');
+                    localStorage.removeItem('aici_refresh');
+                    
+                    if (typeof window !== 'undefined' && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/logout')) {
+                        window.location.href = '/login';
+                    }
                 }
-            } catch (err) {
-                isRefreshing = false;
-                localStorage.removeItem('aici_token');
-                localStorage.removeItem('aici_refresh');
-                redirectToLogin(endpoint);
+            } else if (isRefreshing) {
+                // Wait for existing refresh
+                return new Promise((resolve) => {
+                    addRefreshSubscriber(async () => {
+                        resolve(await (await attemptFetch()).json());
+                    });
+                }) as any;
+            } else if (typeof window !== 'undefined' && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/logout')) {
+                window.location.href = '/login';
             }
-        } else if (isRefreshing) {
-            // Wait for existing refresh
-            return new Promise((resolve) => {
-                addRefreshSubscriber(async () => {
-                    resolve(await (await attemptFetch()).json());
-                });
-            }) as any;
-        } else {
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('aici_token');
-                localStorage.removeItem('aici_refresh');
-            }
-            redirectToLogin(endpoint);
         }
-    }
 
-    if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        const errorMessage = error.detail || error.message || 'API request failed';
-        const err = new Error(errorMessage) as any;
-        err.status = res.status;
-        err.data = error;
-        throw err;
-    }
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({}));
+            const errorMessage = error.detail || error.message || 'API request failed';
+            const err = new Error(errorMessage) as any;
+            err.status = res.status;
+            err.data = error;
+            throw err;
+        }
 
-    if (res.status === 204) {
-        return {} as T;
-    }
+        if (res.status === 204) {
+            return {} as T;
+        }
 
-    return res.json();
+        return res.json();
+    };
+    
+    // Use deduplication for GET requests
+    if (shouldDedupe) {
+        const cacheKey = getCacheKey(endpoint, options);
+        return getDedupedRequest(cacheKey, doFetch);
+    }
+    
+    return doFetch();
 }
 
 
@@ -288,6 +311,22 @@ export const enrollmentsApi = {
     }),
 };
 
+// User Analytics API
+export const userAnalyticsApi = {
+    me: () => fetcher<{ data: any }>('/v1/analytics/me'),
+};
+
+// Certificates API (User)
+export const certificatesApi = {
+    list: () => fetcher<{ certificates: any[] }>('/v1/certificates'),
+    show: (certificateId: string) => fetcher<{ certificate: any }>(`/v1/certificates/${certificateId}`),
+    download: (certificateId: string) => `${BASE_URL}/v1/certificates/${certificateId}/download`,
+    verify: (certificateNumber: string) => fetcher<{ certificate: any; is_valid: boolean }>('/v1/certificates/verify', {
+        method: 'POST',
+        body: JSON.stringify({ certificate_number: certificateNumber }),
+    }),
+};
+
 // Payments API
 export const paymentsApi = {
     create: (enrollmentId: string) => fetcher<{ data: { payment_id: string; xendit_invoice_url: string } }>(`/v1/payments/create/${enrollmentId}`, {
@@ -300,11 +339,11 @@ export const paymentsApi = {
 
 // Auth API (Sanctum)
 export const authApi = {
-    register: (data: any) => fetcher<{ data: any }>('/v1/auth/register', {
+    register: (data: any) => fetcher<{ data: { user: any; access_token: string; token?: string } }>('/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
     }),
-    login: (credentials: any) => fetcher<{ data: { user: any; token?: string; access?: string; access_token?: string; refresh?: string } }>('/v1/auth/login', {
+    login: (credentials: any) => fetcher<{ data: { user: any; access_token: string; token?: string } }>('/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
     }),
@@ -382,6 +421,20 @@ export const api = {
             update: (id: string, data: any) => fetcher<any>(`/v1/admin/schedules/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
             delete: (id: string) => fetcher<any>(`/v1/admin/schedules/${id}`, { method: 'DELETE' }),
         },
+        // Certificates Management
+        certificates: {
+            list: (params?: string) => fetcher<any>(`/v1/admin/certificates${params ? `?${params}` : ''}`),
+            get: (id: string) => fetcher<any>(`/v1/admin/certificates/${id}`),
+            statistics: () => fetcher<any>('/v1/admin/certificates/statistics'),
+            eligibleEnrollments: (params?: string) => fetcher<any>(`/v1/admin/certificates/eligible-enrollments${params ? `?${params}` : ''}`),
+            issue: (data: any) => fetcher<any>('/v1/admin/certificates', { method: 'POST', body: JSON.stringify(data) }),
+            revoke: (id: string, reason: string) => fetcher<any>(`/v1/admin/certificates/${id}/revoke`, {
+                method: 'POST',
+                body: JSON.stringify({ reason }),
+            }),
+            regenerate: (id: string) => fetcher<any>(`/v1/admin/certificates/${id}/regenerate`, { method: 'POST' }),
+            delete: (id: string) => fetcher<any>(`/v1/admin/certificates/${id}`, { method: 'DELETE' }),
+        },
         // Analytics
         analytics: {
             overview: (dateRange?: string) => fetcher<any>(`/v1/admin/analytics/overview${dateRange ? `?range=${dateRange}` : ''}`),
@@ -399,28 +452,30 @@ export const api = {
         },
     },
     // Public Content APIs (Laravel endpoints with /v1 prefix)
+    // Note: These use BaseController which returns { success, message, data }
     programs: {
-        list: (params?: string) => fetcher<{ data: BackendProgram[] }>(`/v1/programs${params ? `?${params}` : ''}`),
-        show: (slug: string) => fetcher<{ data: BackendProgram }>(`/v1/programs/${slug}`),
+        list: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendProgram[] }>(`/v1/programs${params ? `?${params}` : ''}`),
+        show: (slug: string) => fetcher<{ success: boolean; message: string; data: BackendProgram }>(`/v1/programs/${slug}`),
     },
     facilities: {
-        list: (params?: string) => fetcher<{ data: BackendFacility[] }>(`/v1/facilities${params ? `?${params}` : ''}`),
-        show: (id: string) => fetcher<{ data: BackendFacility }>(`/v1/facilities/${id}`),
+        list: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendFacility[] }>(`/v1/facilities${params ? `?${params}` : ''}`),
+        show: (id: string) => fetcher<{ success: boolean; message: string; data: BackendFacility }>(`/v1/facilities/${id}`),
     },
     galleries: {
-        list: (params?: string) => fetcher<{ data: BackendGalleryImage[] }>(`/v1/galleries${params ? `?${params}` : ''}`),
-        show: (id: string) => fetcher<{ data: BackendGalleryImage }>(`/v1/galleries/${id}`),
+        list: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendGalleryImage[] }>(`/v1/galleries${params ? `?${params}` : ''}`),
+        show: (id: string) => fetcher<{ success: boolean; message: string; data: BackendGalleryImage }>(`/v1/galleries/${id}`),
     },
     articles: {
-        list: (params?: string) => fetcher<{ data: BackendArticle[] }>(`/v1/articles${params ? `?${params}` : ''}`),
-        show: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
+        list: (params?: string) => fetcher<{ success: boolean; message: string; data: BackendArticle[] }>(`/v1/articles${params ? `?${params}` : ''}`),
+        show: (slug: string) => fetcher<{ success: boolean; message: string; data: BackendArticle }>(`/v1/articles/${slug}`),
     },
 
     // Content Management APIs
+    // Note: ContentController returns { success, results } format
     content: {
         // Testimonials
         testimonials: () => fetcher<{
-            count: number; success: boolean; results: BackendTestimonial[]
+            success: boolean; results: BackendTestimonial[]
         }>('/v1/content/testimonials'),
         createTestimonial: (data: FormData) => fetcher<any>('/v1/admin/content/testimonials', { method: 'POST', body: data }),
         updateTestimonial: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'PATCH', body: data }),
@@ -429,7 +484,7 @@ export const api = {
 
         // Partners
         partners: () => fetcher<{
-            count: number; success: boolean; results: BackendPartner[]
+            success: boolean; results: BackendPartner[]
         }>('/v1/content/partners'),
         createPartner: (data: FormData) => fetcher<any>('/v1/admin/content/partners', { method: 'POST', body: data }),
         updatePartner: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'PATCH', body: data }),
@@ -442,7 +497,7 @@ export const api = {
 
         // Team
         team: (roleType?: string) => fetcher<{
-            count: number; success: boolean; results: BackendTeamMember[]
+            success: boolean; results: BackendTeamMember[]
         }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`),
         createTeamMember: (data: FormData) => fetcher<any>('/v1/admin/content/team', { method: 'POST', body: data }),
         updateTeamMember: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'PATCH', body: data }),
@@ -456,23 +511,23 @@ export const api = {
 
         // Gallery
         gallery: (params?: string) => fetcher<{
-            count: number; success: boolean; results: BackendGalleryImage[]
+            success: boolean; results: BackendGalleryImage[]
         }>(`/v1/admin/gallery${params ? `?${params}` : ''}`),
-        featuredGallery: () => fetcher<{ data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
+        featuredGallery: () => fetcher<{ success: boolean; message: string; data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
         createGalleryImage: (data: FormData) => fetcher<any>('/v1/admin/gallery', { method: 'POST', body: data }),
         updateGalleryImage: (id: string, data: FormData) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'PATCH', body: data }),
         deleteGalleryImage: (id: string) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'DELETE' }),
 
         // Articles
-        articles: (params?: string) => fetcher<{ success: boolean; count: number; next: string | null; previous: string | null; results: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
-        articleBySlug: (slug: string) => fetcher<{ data: BackendArticle }>(`/v1/articles/${slug}`),
+        articles: (params?: string) => fetcher<{ success: boolean; results: BackendArticle[] }>(`/v1/admin/articles${params ? `?${params}` : ''}`),
+        articleBySlug: (slug: string) => fetcher<{ success: boolean; message: string; data: BackendArticle }>(`/v1/articles/${slug}`),
         createArticle: (data: FormData) => fetcher<any>('/v1/admin/articles', { method: 'POST', body: data }),
         updateArticle: (slug: string, data: FormData) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'PATCH', body: data }),
         deleteArticle: (slug: string) => fetcher<any>(`/v1/admin/articles/${slug}`, { method: 'DELETE' }),
 
         // Facilities
         facilities: (category?: string) => fetcher<{
-            count: number; success: boolean; results: BackendFacility[]
+            success: boolean; results: BackendFacility[]
         }>(`/v1/admin/facilities${category ? `?category=${category}` : ''}`),
         createFacility: (data: FormData) => fetcher<any>('/v1/admin/facilities', { method: 'POST', body: data }),
         updateFacility: (id: string, data: FormData) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'PATCH', body: data }),
@@ -480,7 +535,7 @@ export const api = {
         deleteFacility: (id: string) => fetcher<any>(`/v1/admin/facilities/${id}`, { method: 'DELETE' }),
 
         // Programs
-        programs: () => fetcher<{ data: BackendProgram[] }>('/v1/programs'),
+        programs: () => fetcher<{ success: boolean; results: BackendProgram[] }>('/v1/admin/programs'),
         createProgram: (data: FormData) => fetcher<any>('/v1/admin/programs', { method: 'POST', body: data }),
         updateProgram: (id: string, data: FormData) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'PATCH', body: data }),
         deleteProgram: (id: string) => fetcher<any>(`/v1/admin/programs/${id}`, { method: 'DELETE' }),
