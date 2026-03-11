@@ -50,7 +50,7 @@ export default function KontakPage() {
         { icon: "instagram", href: settings.instagram_url, color: getSocialColor('instagram') },
         { icon: "linkedin", href: settings.linkedin_url, color: getSocialColor('linkedin') },
         { icon: "email", href: `mailto:${settings.email}`, color: getSocialColor('email') },
-        { icon: "whatsapp", href: `https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`, color: getSocialColor('whatsapp') },
+        { icon: "whatsapp", href: `https://wa.me/${settings.whatsapp?.replace(/\D/g, '') || ''}`, color: getSocialColor('whatsapp') },
         { icon: "phone", href: `tel:${settings.phone}`, color: getSocialColor('phone') },
     ].filter(link => link.href && link.href !== "mailto:" && link.href !== "https://wa.me/" && link.href !== "tel:") : [];
 

@@ -20,8 +20,13 @@ const Testimonials = () => {
         setMounted(true);
         const fetchTestimonials = async () => {
             try {
-                const res = await api.content.testimonials();
-                setTestimonials(res.results);
+                const list = await api.content.testimonials();
+                const arr: BackendTestimonial[] = Array.isArray(list)
+                    ? list
+                    : Array.isArray((list as any)?.results)
+                    ? (list as any).results
+                    : [];
+                setTestimonials(arr);
             } catch (err) {
                 console.error("Failed to fetch testimonials", err);
             } finally {

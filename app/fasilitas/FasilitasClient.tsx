@@ -4,8 +4,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
+import MapSection from "@/components/MapSection";
 import { useEffect, useState } from "react";
-import { api, BackendFacility } from "@/lib/api";
+import { api, BackendFacility, getImageUrl } from "@/lib/api";
 import Skeleton, { ImageSkeleton } from "@/components/ui/Skeleton";
 
 /**
@@ -30,6 +31,7 @@ const categoryTabs = [
 export default function FasilitasPage({ initialFacilities }: { initialFacilities?: BackendFacility[] }) {
     const [facilities, setFacilities] = useState<BackendFacility[]>(initialFacilities ?? []);
     const [loading, setLoading] = useState(!initialFacilities);
+    const [activeTab, setActiveTab] = useState<string>('SEMUA');
 
     useEffect(() => {
         // Skip the fetch if initial data was provided by the Server Component (ISR)
@@ -149,15 +151,15 @@ export default function FasilitasPage({ initialFacilities }: { initialFacilities
                         facilities.map((facility, index) => (
                             <div
                                 key={facility.id}
-                                id={facility.category.toLowerCase().replace('_', '-')}
+                                id={facility.type?.toLowerCase().replace('_', '-')}
                                 className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 lg:gap-16 p-8 lg:p-12 mb-8 border-4 border-primary/20 rounded-3xl bg-gray-50/30`}
                             >
                                 {/* Image */}
                                 <div className="lg:w-1/2">
                                     <div className="relative aspect-video rounded-2xl overflow-hidden shadow-lg">
                                         <Image
-                                            src={facility.image || '/placeholder-image.jpg'}
-                                            alt={facility.title}
+                                            src={getImageUrl(facility.image)}
+                                            alt={facility.name}
                                             fill
                                             className="object-cover"
                                             sizes="50vw"
@@ -168,10 +170,10 @@ export default function FasilitasPage({ initialFacilities }: { initialFacilities
                                 {/* Content */}
                                 <div className="lg:w-1/2 flex flex-col justify-center">
                                     <span className="text-secondary text-sm font-bold uppercase tracking-wider mb-2">
-                                        {facility.category_display || facility.category}
+                                        {facility.category_display || facility.type}
                                     </span>
                                     <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                                        {facility.title}
+                                        {facility.name}
                                     </h2>
                                     <p className="text-primary/70 leading-relaxed">
                                         {facility.description}
@@ -182,6 +184,9 @@ export default function FasilitasPage({ initialFacilities }: { initialFacilities
                     )}
                 </div>
             </section>
+
+            {/* Map Section */}
+            <MapSection />
 
             <Footer />
         </main>

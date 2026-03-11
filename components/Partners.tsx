@@ -20,8 +20,13 @@ const Partners = () => {
         setMounted(true);
         const fetchPartners = async () => {
             try {
-                const res = await api.content.partners();
-                setPartners(res.results);
+                const list = await api.content.partners();
+                const arr: BackendPartner[] = Array.isArray(list)
+                    ? list
+                    : Array.isArray((list as any)?.results)
+                    ? (list as any).results
+                    : [];
+                setPartners(arr);
             } catch (err) {
                 console.error("Failed to fetch partners", err);
             } finally {

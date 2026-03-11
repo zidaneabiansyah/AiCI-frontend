@@ -25,9 +25,9 @@ const ProgramsPreview = () => {
         setMounted(true);
         const fetchPrograms = async () => {
             try {
-                const res = await api.content.programs();
-                // Take only first 5 programs to fit the layout (6th slot is button)
-                setPrograms((res.results || []).slice(0, 5));
+                const res = await api.programs.list();
+                const list = res.data || [];
+                setPrograms(list.slice(0, 5));
             } catch (err) {
                 console.error("Failed to fetch programs", err);
             } finally {
@@ -37,7 +37,6 @@ const ProgramsPreview = () => {
         fetchPrograms();
     }, []);
 
-    // Prevent hydration mismatch by not rendering until mounted
     if (!mounted) {
         return (
             <section className="py-20 bg-[#eef2f5]">

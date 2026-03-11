@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api, BackendArticle } from "@/lib/api";
+import { api, BackendArticle, getImageUrl } from "@/lib/api";
 import Skeleton, { ImageSkeleton } from "@/components/ui/Skeleton";
 
 /**
@@ -130,7 +130,7 @@ export default function ArtikelPage({ initialData }: { initialData?: { data: Bac
                                     {/* Thumbnail */}
                                     <div className="relative aspect-video bg-gray-200">
                                         <Image
-                                            src={article.featured_image || '/placeholder-image.jpg'}
+                                            src={getImageUrl(article.featured_image)}
                                             alt={article.title}
                                             fill
                                             className="object-cover transition-none"

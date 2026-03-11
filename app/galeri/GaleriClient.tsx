@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import MapSection from "@/components/MapSection";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { api, BackendGalleryImage } from "@/lib/api";
+import { api, BackendGalleryImage, getImageUrl } from "@/lib/api";
 import { ImageSkeleton } from "@/components/ui/Skeleton";
 
 /**
@@ -103,7 +103,7 @@ export default function GaleriPage() {
                                 >
                                     <div className="relative aspect-video rounded-2xl overflow-hidden shadow-lg">
                                         <Image
-                                            src={image.image || '/placeholder-image.jpg'}
+                                            src={getImageUrl(image.image)}
                                             alt={image.title}
                                             fill
                                             className="object-cover"
@@ -135,7 +135,7 @@ export default function GaleriPage() {
                     >
                         <div className="relative aspect-video">
                             <Image
-                                src={selectedImage.image || '/placeholder-image.jpg'}
+                                src={getImageUrl(selectedImage.image)}
                                 alt={selectedImage.title}
                                 fill
                                 className="object-cover"
