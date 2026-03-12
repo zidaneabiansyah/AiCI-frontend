@@ -484,7 +484,7 @@ export const api = {
         // Testimonials
         testimonials: () =>
             fetcher<{ success: boolean; results: BackendTestimonial[] }>('/v1/content/testimonials')
-                .then(r => r.results ?? []),
+                .then(r => (r && r.results) ?? []),
         createTestimonial: (data: FormData) => fetcher<any>('/v1/admin/content/testimonials', { method: 'POST', body: data }),
         updateTestimonial: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/testimonials/${id}`, { method: 'PATCH', body: data }),
         reorderTestimonials: (ids: string[]) => fetcher<any>('/v1/admin/content/testimonials/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
@@ -493,7 +493,7 @@ export const api = {
         // Partners
         partners: () =>
             fetcher<{ success: boolean; results: BackendPartner[] }>('/v1/content/partners')
-                .then(r => r.results ?? []),
+                .then(r => (r && r.results) ?? []),
         createPartner: (data: FormData) => fetcher<any>('/v1/admin/content/partners', { method: 'POST', body: data }),
         updatePartner: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/partners/${id}`, { method: 'PATCH', body: data }),
         reorderPartners: (ids: string[]) => fetcher<any>('/v1/admin/content/partners/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
@@ -506,7 +506,7 @@ export const api = {
         // Team
         team: (roleType?: string) =>
             fetcher<{ success: boolean; results: BackendTeamMember[] }>(`/v1/content/team${roleType ? `?role_type=${roleType}` : ''}`)
-                .then(r => r.results ?? []),
+                .then(r => (r && r.results) ?? []),
         createTeamMember: (data: FormData) => fetcher<any>('/v1/admin/content/team', { method: 'POST', body: data }),
         updateTeamMember: (id: string, data: FormData) => fetcher<any>(`/v1/admin/content/team/${id}`, { method: 'PATCH', body: data }),
         reorderTeamMembers: (ids: string[]) => fetcher<any>('/v1/admin/content/team/reorder', { method: 'POST', body: JSON.stringify({ ids }) }),
@@ -518,9 +518,9 @@ export const api = {
         updatePageContent: (key: string, data: FormData) => fetcher<any>(`/v1/admin/content/pages/${key}`, { method: 'PATCH', body: data }),
 
         // Gallery
-        gallery: (params?: string) => fetcher<{
-            success: boolean; results: BackendGalleryImage[]
-        }>(`/v1/admin/gallery${params ? `?${params}` : ''}`),
+        gallery: (params?: string) =>
+            fetcher<{ success: boolean; results: BackendGalleryImage[] }>(`/v1/content/gallery${params ? `?${params}` : ''}`)
+                .then(r => (r && r.results) ?? []),
         featuredGallery: () => fetcher<{ success: boolean; message: string; data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
         createGalleryImage: (data: FormData) => fetcher<any>('/v1/admin/gallery', { method: 'POST', body: data }),
         updateGalleryImage: (id: string, data: FormData) => fetcher<any>(`/v1/admin/gallery/${id}`, { method: 'PATCH', body: data }),

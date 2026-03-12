@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { api, BackendGalleryImage } from "@/lib/api";
+import { api, BackendGalleryImage, getImageUrl } from "@/lib/api";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
@@ -33,7 +33,7 @@ export default function AdminGalleryPage() {
         setIsLoading(true);
         try {
             const data = await api.content.gallery();
-            setImages(data.results);
+            setImages(data || []);
         } catch (err) {
             console.error("Failed to load gallery:", err);
             toast.error("Failed to load gallery");
@@ -46,7 +46,7 @@ export default function AdminGalleryPage() {
         loadImages();
     }, []);
 
-    const filteredImages = images.filter(img => {
+    const filteredImages = (images || []).filter(img => {
         if (filterCategory !== 'All' && img.category !== filterCategory) return false;
         if (filterFeatured !== 'All' && img.is_featured !== filterFeatured) return false;
         return true;
@@ -60,7 +60,7 @@ export default function AdminGalleryPage() {
             setDescription(image.description || "");
             setDateTaken(image.date_taken || "");
             setIsFeatured(image.is_featured);
-            setImagePreviews([image.image]);
+            setImagePreviews([getImageUrl(image.image)]);
         } else {
             resetForm();
         }
@@ -206,7 +206,7 @@ export default function AdminGalleryPage() {
                 <div className="space-y-1">
                     <h3 className="text-xl font-bold text-primary tracking-tight">Photo Gallery</h3>
                     <p className="text-primary/40 text-xs font-bold uppercase tracking-widest">
-                        {filteredImages.length} of {images.length} images • {images.filter(i => i.is_featured).length} featured
+                        {filteredImages.length} of {(images || []).length} images • {(images || []).filter(i => i.is_featured).length} featured
                     </p>
                 </div>
                 <button
@@ -304,7 +304,7 @@ export default function AdminGalleryPage() {
                             {/* Image */}
                             <div className="relative overflow-hidden">
                                 <Image
-                                    src={image.image}
+                                    src={getImageUrl(image.image)}
                                     alt={image.title}
                                     width={400}
                                     height={300}
@@ -414,7 +414,7 @@ export default function AdminGalleryPage() {
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
                                                 {imagePreviews.map((preview, idx) => (
                                                     <div key={idx} className="relative aspect-square rounded-xl overflow-hidden">
-                                                        <Image src={preview} alt={`Preview ${idx + 1}`} fill className="object-cover" />
+                                                        <Image src={getImageUrl(preview)} alt={`Preview ${idx + 1}`} fill className="object-cover" />
                                                     </div>
                                                 ))}
                                             </div>

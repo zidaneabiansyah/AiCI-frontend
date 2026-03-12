@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { api, BackendTestimonial } from "@/lib/api";
+import { api, BackendTestimonial, getImageUrl } from "@/lib/api";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import {
@@ -66,7 +66,7 @@ function SortableTestimonialCard({ testimonial, onEdit, onDelete }: SortableItem
                 {/* Photo */}
                 <div className="relative w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-gray-100">
                     {testimonial.photo ? (
-                        <Image src={testimonial.photo} alt={testimonial.name} fill className="object-cover" />
+                        <Image src={getImageUrl(testimonial.photo)} alt={testimonial.name} fill className="object-cover" />
                     ) : (
                         <div className="w-full h-full bg-gray-100 flex items-center justify-center text-primary/40 font-bold text-xl">
                             {testimonial.name.charAt(0)}
@@ -135,7 +135,8 @@ export default function AdminTestimonialsPage() {
         setIsLoading(true);
         try {
             const data = await api.content.testimonials();
-            setTestimonials(data.results);
+            console.log("Loaded testimonials:", data);
+            setTestimonials(data ?? []);
         } catch (err) {
             console.error("Failed to load testimonials:", err);
             toast.error("Failed to load testimonials");
@@ -155,7 +156,7 @@ export default function AdminTestimonialsPage() {
             const oldIndex = testimonials.findIndex((t) => t.id === active.id);
             const newIndex = testimonials.findIndex((t) => t.id === over.id);
 
-            const newOrder = arrayMove(testimonials, oldIndex, newIndex);
+            const newOrder = arrayMove(testimonials || [], oldIndex, newIndex);
             setTestimonials(newOrder);
 
             // Save new order to backend
@@ -175,7 +176,7 @@ export default function AdminTestimonialsPage() {
             setName(testimonial.name);
             setRole(testimonial.role);
             setQuote(testimonial.quote);
-            setImagePreview(testimonial.photo || "");
+            setImagePreview(getImageUrl(testimonial.photo));
         } else {
             resetForm();
         }
@@ -256,7 +257,7 @@ export default function AdminTestimonialsPage() {
                 <div className="space-y-1">
                     <h3 className="text-xl font-bold text-primary tracking-tight">Student Testimonials</h3>
                     <p className="text-primary/40 text-xs font-bold uppercase tracking-widest">
-                        {testimonials.length} testimonials • Drag to reorder
+                        {(testimonials || []).length} testimonials • Drag to reorder
                     </p>
                 </div>
                 <button
@@ -275,7 +276,7 @@ export default function AdminTestimonialsPage() {
                 <div className="flex justify-center py-20">
                     <div className="w-12 h-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
                 </div>
-            ) : testimonials.length === 0 ? (
+            ) : !testimonials || testimonials.length === 0 ? (
                 <div className="bg-white rounded-[3rem] p-20 text-center">
                     <p className="text-4xl mb-4">💬</p>
                     <h4 className="text-xl font-bold text-primary mb-2">No testimonials yet</h4>
@@ -288,7 +289,7 @@ export default function AdminTestimonialsPage() {
                     onDragEnd={handleDragEnd}
                 >
                     <SortableContext
-                        items={testimonials.map(t => t.id)}
+                        items={(testimonials || []).map(t => t.id)}
                         strategy={verticalListSortingStrategy}
                     >
                         <div className="space-y-4">

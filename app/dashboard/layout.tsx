@@ -10,12 +10,13 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useAuthStore } from '@/lib/store/auth-store';
 import Link from 'next/link';
-import { Home, FileText, BookOpen, CreditCard, User, LogOut, Menu, X, Loader2, BarChart3, Award } from 'lucide-react';
+import { Home, FileText, BookOpen, CreditCard, User, LogOut, Menu, X, Loader2, BarChart3, Award, Book } from 'lucide-react';
 
 const menuItems = [
     { name: 'Dashboard',   href: '/dashboard',              icon: Home       },
     { name: 'Analitik',    href: '/dashboard/analytics',    icon: BarChart3  },
     { name: 'Test Saya',   href: '/dashboard/tests',        icon: FileText   },
+    { name: 'Modul 3D',    href: '/dashboard/learning',     icon: Book   },
     { name: 'Pendaftaran', href: '/dashboard/enrollments',  icon: BookOpen   },
     { name: 'Pembayaran',  href: '/dashboard/payments',     icon: CreditCard },
     { name: 'Sertifikat',  href: '/dashboard/certificates', icon: Award      },

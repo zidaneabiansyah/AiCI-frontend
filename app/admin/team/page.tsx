@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { api, BackendTeamMember } from "@/lib/api";
+import { api, BackendTeamMember, getImageUrl } from "@/lib/api";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import {
@@ -72,7 +72,7 @@ function SortableTeamCard({ member, onEdit, onDelete }: SortableItemProps) {
             {/* Photo */}
             <div className="relative w-32 h-32 rounded-full overflow-hidden mx-auto mb-4 border-4 border-gray-50">
                 {member.photo ? (
-                    <Image src={member.photo} alt={member.name} fill className="object-cover" />
+                    <Image src={getImageUrl(member.photo)} alt={member.name} fill className="object-cover" />
                 ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center text-primary/40 font-bold text-3xl">
                         {member.name.charAt(0)}
@@ -134,7 +134,7 @@ export default function AdminTeamPage() {
         setIsLoading(true);
         try {
             const data = await api.content.team();
-            setTeamMembers(data.results);
+            setTeamMembers(data || []);
         } catch (err) {
             console.error("Failed to load team members:", err);
             toast.error("Failed to load team members");
@@ -147,7 +147,7 @@ export default function AdminTeamPage() {
         loadTeamMembers();
     }, []);
 
-    const filteredMembers = teamMembers.filter(m => m.role_type === activeTab);
+    const filteredMembers = (teamMembers || []).filter(m => m.role_type === activeTab);
 
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
@@ -180,7 +180,7 @@ export default function AdminTeamPage() {
             setName(member.name);
             setPosition(member.position);
             setRoleType(member.role_type);
-            setImagePreview(member.photo);
+            setImagePreview(getImageUrl(member.photo));
         } else {
             resetForm();
         }
@@ -254,8 +254,8 @@ export default function AdminTeamPage() {
         }
     };
 
-    const operasionalCount = teamMembers.filter(m => m.role_type === 'OPERASIONAL').length;
-    const tutorCount = teamMembers.filter(m => m.role_type === 'TUTOR').length;
+    const operasionalCount = (teamMembers || []).filter(m => m.role_type === 'OPERASIONAL').length;
+    const tutorCount = (teamMembers || []).filter(m => m.role_type === 'TUTOR').length;
 
     return (
         <div className="space-y-8">
