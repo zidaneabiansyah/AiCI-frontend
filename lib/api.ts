@@ -519,7 +519,7 @@ export const api = {
 
         // Gallery
         gallery: (params?: string) =>
-            fetcher<{ success: boolean; results: BackendGalleryImage[] }>(`/v1/content/gallery${params ? `?${params}` : ''}`)
+            fetcher<{ success: boolean; results: BackendGalleryImage[] }>(`/v1/admin/gallery${params ? `?${params}` : ''}`)
                 .then(r => (r && r.results) ?? []),
         featuredGallery: () => fetcher<{ success: boolean; message: string; data: BackendGalleryImage[] }>('/v1/galleries?is_featured=true'),
         createGalleryImage: (data: FormData) => fetcher<any>('/v1/admin/gallery', { method: 'POST', body: data }),
