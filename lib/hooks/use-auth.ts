@@ -95,9 +95,12 @@ export function useAuth() {
         mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
         onSuccess: (response) => {
             const token = (response.data.access_token || response.data.token) as string;
-            setAuth(response.data.user, token);
+            const userPayload = resolveUserPayload(response.data.user) ?? response.data.user;
+            setAuth(userPayload, token);
             toast.success('Login berhasil!');
-            router.replace('/dashboard');
+            const role = normalizeRole((response.data.user || {}).role);
+            const target = role === 'tutor' ? '/tutor' : '/dashboard';
+            router.replace(target);
         },
         onError: (error) => {
             toast.error(getErrorMessage(error, 'Login gagal. Periksa email dan password Anda.'));
@@ -109,7 +112,8 @@ export function useAuth() {
         mutationFn: (data: RegisterData) => authApi.register(data),
         onSuccess: (response) => {
             const token = (response.data.access_token || response.data.token) as string;
-            setAuth(response.data.user, token);
+            const userPayload = resolveUserPayload(response.data.user) ?? response.data.user;
+            setAuth(userPayload, token);
             toast.success('Registrasi berhasil! Selamat datang!');
             router.replace('/dashboard');
         },

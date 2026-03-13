@@ -18,10 +18,23 @@ import {
   ASSEMBLY_SCENE_SIGNATURE,
 } from "@/lib/assembly/AssemblyScene";
 import { PartPreview3D } from "@/app/dashboard/learning/PartPreview3D";
-import { StepStateSnapshot } from "@/lib/assembly/types";
+import { AssemblyStep, StepStateSnapshot } from "@/lib/assembly/types";
 import {
   radarLessonRuntime,
+  RADAR_BASE_STAND_PART_NAME,
 } from "@/lib/assembly/radarLesson";
+import type {
+  RadarLearningStepSpec,
+  RadarLessonDerivedState,
+  RadarPart,
+  RadarPartPack,
+} from "@/lib/assembly/radarLessonTypes";
+import {
+  fetchAllLessonSteps,
+  fetchLessonMeta,
+  type LessonMetaResponse,
+  type LessonStepResponse,
+} from "@/lib/assembly/lessonApi";
 
 type DebugTransformState = {
   position: { x: number; y: number; z: number };
@@ -87,14 +100,129 @@ function formatCameraDebugState(
     },
   };
 }
+
+type LessonDerivedStateInput = {
+  stepState: StepStateSnapshot;
+  steps: AssemblyStep[];
+  stepSpecs: RadarLearningStepSpec[];
+  parts: RadarPart[];
+  partPacks: readonly RadarPartPack[];
+  getWorkspacePreviewImage: (stepNumber: number) => string;
+};
+
+function getLessonDerivedState({
+  stepState,
+  steps,
+  stepSpecs,
+  parts,
+  partPacks,
+  getWorkspacePreviewImage,
+}: LessonDerivedStateInput): RadarLessonDerivedState {
+  const totalSteps = steps.length;
+  const hasRemainingSteps = stepState.currentStepIndex < totalSteps;
+  const upcomingStepNumber = hasRemainingSteps
+    ? stepState.currentStepIndex + 1
+    : totalSteps;
+  const currentLearningStep = hasRemainingSteps
+    ? (steps[stepState.currentStepIndex] ?? null)
+    : null;
+  const currentLearningSpec = hasRemainingSteps
+    ? (stepSpecs[stepState.currentStepIndex] ?? null)
+    : null;
+  const currentPack =
+    partPacks.find(
+      (pack) =>
+        upcomingStepNumber >= pack.startStep &&
+        upcomingStepNumber <= pack.endStep,
+    ) ?? partPacks[partPacks.length - 1];
+  const partsById = new Map(parts.map((part) => [part.id, part]));
+  const currentPart = currentLearningSpec?.partId
+    ? (partsById.get(currentLearningSpec.partId) ?? null)
+    : null;
+  const currentStepQuantity = currentLearningSpec?.quantity ?? 0;
+  const currentInstruction =
+    currentLearningStep?.instruction ??
+    "Assembly selesai. Semua part sudah ditempatkan.";
+  const currentPartEmptyMessage = hasRemainingSteps
+    ? currentLearningSpec?.hidePartNamesOnComplete?.includes(
+        RADAR_BASE_STAND_PART_NAME,
+      )
+      ? "Subassembly radarbot_1 sedang disiapkan supaya fokus pindah ke komponen akhir."
+      : "Belum ada part yang dimunculkan. Tekan Next untuk mulai dari MC."
+    : "Semua part sudah selesai ditempatkan.";
+  const desiredWorkspacePreviewSrc =
+    getWorkspacePreviewImage(upcomingStepNumber);
+  const sequenceProgressPercent =
+    totalSteps <= 1
+      ? 0
+      : (Math.max(upcomingStepNumber - 1, 0) / (totalSteps - 1)) * 100;
+  const sequenceHandlePercent = Math.min(
+    98,
+    Math.max(2, sequenceProgressPercent),
+  );
+  const sequenceMarkers = partPacks.slice(0, -1).map(
+    (pack) => (pack.endStep / totalSteps) * 100,
+  );
+
+  return {
+    hasRemainingSteps,
+    upcomingStepNumber,
+    currentLearningStep,
+    currentLearningSpec,
+    currentPack,
+    currentPart,
+    currentStepQuantity,
+    currentInstruction,
+    currentPartEmptyMessage,
+    desiredWorkspacePreviewSrc,
+    sequenceProgressPercent,
+    sequenceHandlePercent,
+    sequenceMarkers,
+  };
+}
 export default function Learning3DPage() {
   const [mode, setMode] = useState<"catalog" | "workspace">("catalog");
   const [introOpen, setIntroOpen] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [loadingScene, setLoadingScene] = useState(false);
+  const [lessonMeta, setLessonMeta] = useState<LessonMetaResponse | null>(null);
+  const [remoteSteps, setRemoteSteps] = useState<AssemblyStep[] | null>(null);
+  const [remoteStepSpecs, setRemoteStepSpecs] = useState<
+    RadarLearningStepSpec[] | null
+  >(null);
+  const [stepPayloads, setStepPayloads] = useState<
+    Record<number, LessonStepResponse>
+  >({});
+  const [lessonLoading, setLessonLoading] = useState(false);
+  const [lessonError, setLessonError] = useState<string | null>(null);
   const [stepState, setStepState] =
     useState<StepStateSnapshot>(radarLessonRuntime.initialStepState);
-  const [modelUrl] = useState(radarLessonRuntime.defaultModelUrl);
+  const stepsForScene = remoteSteps ?? radarLessonRuntime.steps;
+  const stepSpecsForScene = remoteStepSpecs ?? radarLessonRuntime.stepSpecs;
+  const lessonIntro = lessonMeta?.intro ?? radarLessonRuntime.intro;
+  const lessonGuideImages =
+    lessonMeta?.guideImages ?? radarLessonRuntime.guideImages;
+  const lessonReferencePreview =
+    lessonMeta?.referencePreviewImage ?? radarLessonRuntime.referencePreviewImage;
+  const lessonParts = lessonMeta?.parts ?? radarLessonRuntime.parts;
+  const lessonPartPacks = lessonMeta?.partPacks ?? radarLessonRuntime.partPacks;
+  const lessonTotalSteps =
+    lessonMeta?.totalSteps ?? radarLessonRuntime.totalSteps;
+  const transformDebugEnabled =
+    lessonMeta?.transformDebugEnabled ?? radarLessonRuntime.transformDebugEnabled;
+  const modelUrl = lessonMeta?.defaultModelUrl ?? radarLessonRuntime.defaultModelUrl;
+  const lessonReady =
+    !lessonLoading &&
+    !lessonError &&
+    Boolean(lessonMeta && remoteSteps && remoteStepSpecs);
+  const initialStepState = useMemo<StepStateSnapshot>(
+    () => ({
+      currentStepIndex: 0,
+      totalSteps: stepsForScene.length,
+      isAnimating: false,
+    }),
+    [stepsForScene.length],
+  );
   const [sceneError, setSceneError] = useState<string | null>(null);
   const [workspaceVisible, setWorkspaceVisible] = useState(false);
   const [showReferenceCard, setShowReferenceCard] = useState(true);
@@ -120,9 +248,11 @@ export default function Learning3DPage() {
   const sceneRef = useRef<AssemblyScene | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const sceneConfigSignature = radarLessonRuntime.getSceneConfigSignature(
-    ASSEMBLY_SCENE_SIGNATURE,
-  );
+  const sceneConfigSignature = useMemo(() => {
+    const stepSignature = stepsForScene.map((step) => step.id).join("|");
+    const sourceTag = remoteSteps ? "remote" : "local";
+    return `${ASSEMBLY_SCENE_SIGNATURE}:${sourceTag}:${stepSignature}`;
+  }, [remoteSteps, stepsForScene]);
   const {
     upcomingStepNumber,
     currentLearningStep,
@@ -135,21 +265,40 @@ export default function Learning3DPage() {
     desiredWorkspacePreviewSrc,
     sequenceHandlePercent,
     sequenceMarkers,
-  } = useMemo(() => radarLessonRuntime.getDerivedState(stepState), [stepState]);
+  } = useMemo(
+    () =>
+      getLessonDerivedState({
+        stepState,
+        steps: stepsForScene,
+        stepSpecs: stepSpecsForScene,
+        parts: lessonParts,
+        partPacks: lessonPartPacks,
+        getWorkspacePreviewImage: radarLessonRuntime.getWorkspacePreviewImage,
+      }),
+    [
+      lessonPartPacks,
+      lessonParts,
+      stepSpecsForScene,
+      stepState,
+      stepsForScene,
+    ],
+  );
   const currentDebugPartNames = useMemo(() => {
-    if (!radarLessonRuntime.transformDebugEnabled || !currentLearningSpec?.partId) {
+    if (!transformDebugEnabled || !currentLearningSpec?.partId) {
       return [];
     }
     return currentLearningStep?.parts.map((part) => part.name) ?? [];
-  }, [currentLearningSpec?.partId, currentLearningStep]);
+  }, [currentLearningSpec?.partId, currentLearningStep, transformDebugEnabled]);
   const currentDebugPartSignature = currentDebugPartNames.join("|");
   const [workspacePreviewSrc, setWorkspacePreviewSrc] = useState(
     desiredWorkspacePreviewSrc,
   );
-  const currentStepRuntimeBehavior = useMemo(
-    () => radarLessonRuntime.resolveStepRuntimeBehavior(upcomingStepNumber),
-    [upcomingStepNumber],
-  );
+  const currentStepRuntimeBehavior = useMemo(() => {
+    return (
+      stepPayloads[upcomingStepNumber]?.runtimeBehavior ??
+      radarLessonRuntime.resolveStepRuntimeBehavior(upcomingStepNumber)
+    );
+  }, [stepPayloads, upcomingStepNumber]);
   const showSceneSkeleton = loadingScene || !sceneReady;
 
   const readDebugTransform = useCallback(
@@ -244,50 +393,64 @@ export default function Learning3DPage() {
     setCameraCopied(false);
   }, [readCameraDebugState]);
 
-  const getResolvedCameraPreset = useCallback((stepNumber: number) => {
-    const stepIndex = Math.min(
-      Math.max(stepNumber - 1, 0),
-      radarLessonRuntime.steps.length - 1,
-    );
-    const focusPoints = sceneRef.current
-      ? radarLessonRuntime.steps.slice(0, stepIndex + 1)
-          .flatMap((step, index) =>
-            step.parts
-              .map((part) =>
-                sceneRef.current?.getConfiguredPartTransform(index, part.name),
-              )
-              .filter(Boolean)
-              .map((transform) => transform!.finalPosition),
-          )
-      : [];
+  const getResolvedCameraPreset = useCallback(
+    (stepNumber: number) => {
+      const payload = stepPayloads[stepNumber];
+      if (payload?.cameraPreset) {
+        return payload.cameraPreset;
+      }
 
-    return radarLessonRuntime.resolveCameraPreset({
-      stepNumber,
-      currentStepIndex: stepIndex,
-      currentPartId: radarLessonRuntime.stepSpecs[stepIndex]?.partId ?? null,
-      focusPoints,
-    });
-  }, []);
+      const stepIndex = Math.min(
+        Math.max(stepNumber - 1, 0),
+        stepsForScene.length - 1,
+      );
+      const focusPoints = sceneRef.current
+        ? stepsForScene
+            .slice(0, stepIndex + 1)
+            .flatMap((step, index) =>
+              step.parts
+                .map((part) =>
+                  sceneRef.current?.getConfiguredPartTransform(
+                    index,
+                    part.name,
+                  ),
+                )
+                .filter(Boolean)
+                .map((transform) => transform!.finalPosition),
+            )
+        : [];
+
+      return radarLessonRuntime.resolveCameraPreset({
+        stepNumber,
+        currentStepIndex: stepIndex,
+        currentPartId: stepSpecsForScene[stepIndex]?.partId ?? null,
+        focusPoints,
+      });
+    },
+    [stepPayloads, stepSpecsForScene, stepsForScene],
+  );
 
   const prepareSceneBoot = () => {
     setLoadingScene(true);
     setSceneReady(false);
     setSceneError(null);
-    setStepState(radarLessonRuntime.initialStepState);
+    setStepState(initialStepState);
   };
 
   const openIntroModal = () => {
-    setCatalogPreviewSrc(radarLessonRuntime.referencePreviewImage);
+    if (!lessonReady) return;
+    setCatalogPreviewSrc(lessonReferencePreview);
     setIntroOpen(true);
   };
 
   const openWorkspace = () => {
+    if (!lessonReady) return;
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
 
-    setCatalogPreviewSrc(radarLessonRuntime.referencePreviewImage);
+    setCatalogPreviewSrc(lessonReferencePreview);
     setIntroOpen(false);
     setPartsListOpen(false);
     prepareSceneBoot();
@@ -312,6 +475,63 @@ export default function Learning3DPage() {
   useEffect(() => {
     setWorkspacePreviewSrc(desiredWorkspacePreviewSrc);
   }, [desiredWorkspacePreviewSrc]);
+
+  useEffect(() => {
+    setCatalogPreviewSrc(lessonReferencePreview);
+  }, [lessonReferencePreview]);
+
+  useEffect(() => {
+    if (!transformDebugEnabled) {
+      setDebugOpen(false);
+    }
+  }, [transformDebugEnabled]);
+
+  useEffect(() => {
+    let active = true;
+    setLessonLoading(true);
+    setLessonError(null);
+
+    (async () => {
+      try {
+        const meta = await fetchLessonMeta("radar");
+        const stepsPayload = await fetchAllLessonSteps(
+          "radar",
+          meta.totalSteps,
+        );
+
+        if (!active) return;
+
+        const payloadMap: Record<number, LessonStepResponse> = {};
+        stepsPayload.forEach((payload) => {
+          payloadMap[payload.stepNumber] = payload;
+        });
+
+        setLessonMeta(meta);
+        setRemoteSteps(stepsPayload.map((payload) => payload.step));
+        setRemoteStepSpecs(stepsPayload.map((payload) => payload.stepSpec));
+        setStepPayloads(payloadMap);
+      } catch (error) {
+        if (!active) return;
+        setLessonError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load lesson data.",
+        );
+      } finally {
+        if (active) setLessonLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (mode === "workspace" && lessonError) {
+      closeWorkspace();
+    }
+  }, [lessonError, mode]);
 
   useEffect(() => {
     return () => {
@@ -380,11 +600,14 @@ export default function Learning3DPage() {
     let disposed = false;
     const host = canvasHostRef.current;
     host.innerHTML = "";
+    setLoadingScene(true);
+    setSceneReady(false);
+    setSceneError(null);
 
     const scene = new AssemblyScene({
       container: host,
       modelUrl,
-      steps: radarLessonRuntime.steps,
+      steps: stepsForScene,
       offsetY: 5,
     });
     sceneRef.current = scene;
@@ -590,7 +813,7 @@ export default function Learning3DPage() {
   const jumpToSequenceRatio = async (ratio: number) => {
     const clampedRatio = Math.min(1, Math.max(0, ratio));
     const targetIndex = Math.round(
-      clampedRatio * (radarLessonRuntime.steps.length - 1),
+      clampedRatio * (stepsForScene.length - 1),
     );
     await handleJumpToStep(targetIndex);
   };
@@ -772,8 +995,8 @@ export default function Learning3DPage() {
                 sizes="340px"
                 className="object-contain scale-[0.86]"
                 onError={() => {
-                  if (catalogPreviewSrc !== radarLessonRuntime.guideImages.story) {
-                    setCatalogPreviewSrc(radarLessonRuntime.guideImages.story);
+                  if (catalogPreviewSrc !== lessonGuideImages.story) {
+                    setCatalogPreviewSrc(lessonGuideImages.story);
                   }
                 }}
               />
@@ -789,9 +1012,18 @@ export default function Learning3DPage() {
                 aksi assembly ke posisi final. Satu step bisa berisi satu atau
                 beberapa part yang memang dipasang bersamaan.
               </p>
+              {lessonLoading ? (
+                <p className="text-xs text-[#255d74]/60">
+                  Sinkronisasi data lesson...
+                </p>
+              ) : lessonError ? (
+                <p className="text-xs text-rose-500">
+                  Lesson API bermasalah: {lessonError}
+                </p>
+              ) : null}
               <div className="flex flex-wrap gap-2 text-xs text-[#255d74]/70">
                 <span className="rounded-full border border-[#255d74]/20 px-2 py-1">
-                  {radarLessonRuntime.totalSteps} steps
+                  {lessonTotalSteps} steps
                 </span>
                 <span className="rounded-full border border-[#255d74]/20 px-2 py-1">
                   GLB + named parts
@@ -802,7 +1034,8 @@ export default function Learning3DPage() {
               </div>
               <button
                 onClick={openIntroModal}
-                className="inline-flex items-center rounded-xl bg-[#255d74] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d4d61]"
+                disabled={!lessonReady}
+                className="inline-flex items-center rounded-xl bg-[#255d74] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1d4d61] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Buka Modul Sonar Radar
               </button>
@@ -854,12 +1087,8 @@ export default function Learning3DPage() {
                         sizes="134px"
                         className="object-contain scale-[0.84]"
                         onError={() => {
-                          if (
-                            catalogPreviewSrc !== radarLessonRuntime.guideImages.story
-                          ) {
-                            setCatalogPreviewSrc(
-                              radarLessonRuntime.guideImages.story,
-                            );
+                          if (catalogPreviewSrc !== lessonGuideImages.story) {
+                            setCatalogPreviewSrc(lessonGuideImages.story);
                           }
                         }}
                       />
@@ -870,17 +1099,17 @@ export default function Learning3DPage() {
                 <div className="flex min-h-[360px] flex-col">
                   <div className="pr-8">
                     <h2 className="text-center text-[2.3rem] font-semibold tracking-tight text-[#1e2330] md:text-left">
-                      {radarLessonRuntime.intro.title}
+                      {lessonIntro.title}
                     </h2>
                   </div>
 
                   <div className="mt-4 flex-1 space-y-4 overflow-y-auto pr-1 text-[#1e2330] md:max-h-[320px]">
                     <p className="text-[1rem] leading-[1.65]">
-                      {radarLessonRuntime.intro.description}
+                      {lessonIntro.description}
                     </p>
 
                     <div className="space-y-2.5 text-[15px] leading-[1.65]">
-                      {radarLessonRuntime.intro.outcomes.map((item) => (
+                      {lessonIntro.outcomes.map((item) => (
                         <p key={item}>{item}</p>
                       ))}
                     </div>
@@ -1030,11 +1259,9 @@ export default function Learning3DPage() {
                   sizes="300px"
                   className="object-contain scale-[0.86]"
                   onError={() => {
-                    if (
-                      workspacePreviewSrc !== radarLessonRuntime.guideImages.story
-                    ) {
-                      setWorkspacePreviewSrc(radarLessonRuntime.guideImages.story);
-                    }
+                  if (workspacePreviewSrc !== lessonGuideImages.story) {
+                    setWorkspacePreviewSrc(lessonGuideImages.story);
+                  }
                   }}
                 />
               </div>
@@ -1050,7 +1277,7 @@ export default function Learning3DPage() {
           )}
         </div>
 
-        {radarLessonRuntime.transformDebugEnabled ? (
+        {transformDebugEnabled ? (
           <div className="absolute bottom-28 right-6 z-30 hidden w-[280px] xl:block">
             {debugOpen ? (
               <div className="overflow-hidden rounded-[1.55rem] border border-white/75 bg-[#eef4f8]/96 shadow-[0_14px_34px_rgba(93,117,134,0.12)]">
@@ -1404,8 +1631,8 @@ export default function Learning3DPage() {
                       Parts List
                     </p>
                     <p className="text-[10px] uppercase tracking-[0.26em] text-[#8ca0af]">
-                      {radarLessonRuntime.parts.length} jenis /{" "}
-                      {radarLessonRuntime.parts.reduce(
+                      {lessonParts.length} jenis /{" "}
+                      {lessonParts.reduce(
                         (total, part) => total + part.qty,
                         0,
                       )}{" "}
@@ -1418,7 +1645,7 @@ export default function Learning3DPage() {
 
                 <div className="flex-1 overflow-y-auto px-5 py-5 md:px-7 md:py-6">
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-                    {radarLessonRuntime.parts.map((part) => (
+                    {lessonParts.map((part) => (
                       <article
                         key={part.id}
                         className={`rounded-[1.6rem] border px-4 py-5 shadow-sm transition ${

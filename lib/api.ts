@@ -77,6 +77,46 @@ export interface BackendProgram {
     updated_at: string | null;
 }
 
+export interface TutorStudent {
+    name: string;
+    meeting: number | null;
+}
+
+export interface TutorSession {
+    id: string;
+    day_label?: string;
+    time_range?: string;
+    date?: string;
+    level?: string;
+    project?: string;
+    room?: string;
+    meeting?: number | null;
+    tutor_name?: string;
+    notes?: Record<string, string> | null;
+    students?: TutorStudent[];
+}
+
+export interface TutorDashboardResponse {
+    success: boolean;
+    message?: string;
+    data: {
+        tutor?: {
+            id?: number | string;
+            name?: string;
+            email?: string;
+            role?: string;
+        };
+        range_label?: string | null;
+        source?: string | null;
+        sessions?: TutorSession[];
+        stats?: {
+            total_sessions?: number;
+            total_students?: number;
+            total_projects?: number;
+        };
+    } | null;
+}
+
 export interface BackendSiteSettings {
     id: string;
     site_name: string;
@@ -458,6 +498,9 @@ export const api = {
             exportEnrollment: (params?: string) => `${BASE_URL}/v1/admin/reports/export/enrollment${params ? `?${params}` : ''}`,
             exportStudent: (params?: string) => `${BASE_URL}/v1/admin/reports/export/student${params ? `?${params}` : ''}`,
         },
+    },
+    tutor: {
+        dashboard: () => fetcher<TutorDashboardResponse>('/v1/tutor/dashboard'),
     },
     // Public Content APIs (Laravel endpoints with /v1 prefix)
     // Note: These use BaseController which returns { success, message, data }
