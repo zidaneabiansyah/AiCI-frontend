@@ -78,18 +78,20 @@ export default function DashboardTestsPage() {
 
                             <div className="flex gap-3">
                                 <Link
-                                    href={`/placement-test/result/${attempt.id}`}
+                                    href={`/dashboard/tests/result/${attempt.id}`}
                                     className="flex-1 px-4 py-2 bg-[#255d74] text-white rounded-xl text-sm font-bold hover:bg-[#1e4a5f] transition-all text-center"
                                 >
-                                    Lihat Detail
+                                    Lihat Detail & Rekomendasi
                                 </Link>
-                                <button
-                                    onClick={() => window.open(placementTestApi.downloadResult(attempt.id), '_blank')}
+                                <a
+                                    href={placementTestApi.downloadResult(attempt.id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="px-4 py-2 border-2 border-gray-200 text-[#255d74] rounded-xl text-sm font-bold hover:bg-gray-50 transition-all flex items-center gap-2"
                                 >
                                     <Download className="w-4 h-4" />
                                     PDF
-                                </button>
+                                </a>
                             </div>
                         </div>
                     ))}
