@@ -9,11 +9,20 @@ import { formatDate, formatDuration } from '@/lib/utils/format';
 export default function DashboardTestsPage() {
     const { data, isLoading } = useQuery({
         queryKey: ['my-test-attempts'],
-        queryFn: () => placementTestApi.list(), // This should be user's attempts endpoint
+        queryFn: async () => {
+            // Get user's test attempts from backend
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/user/test-attempts`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('aici_token')}`,
+                    'Accept': 'application/json',
+                },
+            });
+            if (!response.ok) throw new Error('Failed to fetch attempts');
+            return response.json();
+        },
     });
 
-    // Mock data for now - replace with actual API call
-    const attempts: any[] = [];
+    const attempts = data?.data || [];
 
     return (
         <div>
@@ -69,18 +78,20 @@ export default function DashboardTestsPage() {
 
                             <div className="flex gap-3">
                                 <Link
-                                    href={`/placement-test/result/${attempt.id}`}
+                                    href={`/dashboard/tests/result/${attempt.id}`}
                                     className="flex-1 px-4 py-2 bg-[#255d74] text-white rounded-xl text-sm font-bold hover:bg-[#1e4a5f] transition-all text-center"
                                 >
-                                    Lihat Detail
+                                    Lihat Detail & Rekomendasi
                                 </Link>
-                                <button
-                                    onClick={() => window.open(placementTestApi.downloadResult(attempt.id), '_blank')}
+                                <a
+                                    href={placementTestApi.downloadResult(attempt.id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="px-4 py-2 border-2 border-gray-200 text-[#255d74] rounded-xl text-sm font-bold hover:bg-gray-50 transition-all flex items-center gap-2"
                                 >
                                     <Download className="w-4 h-4" />
                                     PDF
-                                </button>
+                                </a>
                             </div>
                         </div>
                     ))}

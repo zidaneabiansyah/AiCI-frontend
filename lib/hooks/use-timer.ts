@@ -7,14 +7,21 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseTimerOptions {
     expiresAt: string;
+    initialTimeRemaining?: number;
+    enabled?: boolean; // Add enabled flag to control timer activation
     onExpire?: () => void;
 }
 
-export function useTimer({ expiresAt, onExpire }: UseTimerOptions) {
+export function useTimer({ expiresAt, initialTimeRemaining, enabled = true, onExpire }: UseTimerOptions) {
     const [timeRemaining, setTimeRemaining] = useState<number>(0);
     const [isExpired, setIsExpired] = useState(false);
 
     const hasExpiredRef = useRef(false);
+    const onExpireRef = useRef(onExpire);
+    
+    useEffect(() => {
+        onExpireRef.current = onExpire;
+    }, [onExpire]);
 
     const calculateTimeRemaining = useCallback(() => {
         const now = new Date().getTime();
@@ -24,32 +31,48 @@ export function useTimer({ expiresAt, onExpire }: UseTimerOptions) {
     }, [expiresAt]);
 
     useEffect(() => {
-        // Initial calculation
-        const remaining = calculateTimeRemaining();
+        // Don't start timer if disabled
+        if (!enabled) {
+            return;
+        }
+        
+        // Reset expired flag when initialTimeRemaining changes (new test started)
+        if (initialTimeRemaining !== undefined && initialTimeRemaining > 0) {
+            hasExpiredRef.current = false;
+            setIsExpired(false);
+        }
+        
+        // Use server-provided time if available, otherwise calculate
+        const remaining = initialTimeRemaining !== undefined ? initialTimeRemaining : calculateTimeRemaining();
         setTimeRemaining(remaining);
 
-        if (remaining === 0 && !hasExpiredRef.current) {
-            hasExpiredRef.current = true;
-            setIsExpired(true);
-            onExpire?.();
+        // Don't start timer if already expired
+        if (remaining === 0) {
+            if (!hasExpiredRef.current) {
+                hasExpiredRef.current = true;
+                setIsExpired(true);
+                onExpireRef.current?.();
+            }
             return;
         }
 
         // Update every second
         const interval = setInterval(() => {
-            const remaining = calculateTimeRemaining();
-            setTimeRemaining(remaining);
-
-            if (remaining === 0 && !hasExpiredRef.current) {
-                hasExpiredRef.current = true;
-                setIsExpired(true);
-                onExpire?.();
-                clearInterval(interval);
-            }
+            setTimeRemaining(prev => {
+                const newTime = Math.max(0, prev - 1);
+                
+                if (newTime === 0 && !hasExpiredRef.current) {
+                    hasExpiredRef.current = true;
+                    setIsExpired(true);
+                    onExpireRef.current?.();
+                }
+                
+                return newTime;
+            });
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [expiresAt, calculateTimeRemaining, onExpire]);
+    }, [expiresAt, initialTimeRemaining, calculateTimeRemaining, enabled]);
 
     const formatTime = useCallback(() => {
         const hours = Math.floor(timeRemaining / 3600);
