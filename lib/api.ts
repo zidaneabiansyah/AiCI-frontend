@@ -170,7 +170,10 @@ const PUBLIC_ENDPOINTS = [
     '/v1/placement-tests',
 ];
 
-function isPublicEndpoint(endpoint: string): boolean {
+function isPublicEndpoint(endpoint: string, method: string = 'GET'): boolean {
+    if (method !== 'GET') {
+        return false;
+    }
     return PUBLIC_ENDPOINTS.some(p => endpoint.startsWith(p));
 }
 
@@ -204,10 +207,10 @@ function addRefreshSubscriber(cb: (token: string) => void) {
 }
 
 export async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const isPublic = isPublicEndpoint(endpoint);
+    const method = (options?.method || 'GET').toUpperCase();
+    const isPublic = isPublicEndpoint(endpoint, method);
     
     // For GET requests, use deduplication
-    const method = (options?.method || 'GET').toUpperCase();
     const shouldDedupe = method === 'GET' && !options?.body;
     
     const getHeaders = (withAuth = true) => {

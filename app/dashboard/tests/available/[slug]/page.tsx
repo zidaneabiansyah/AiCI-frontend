@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -44,6 +44,7 @@ export default function DashboardPlacementTestDetailPage() {
     const startTestMutation = useMutation({
         mutationFn: (formData: PreAssessmentFormData) => {
             const payload = {
+                placement_test_id: test.id,
                 full_name: formData.full_name,
                 email: formData.email,
                 age: formData.age,
@@ -70,6 +71,7 @@ export default function DashboardPlacementTestDetailPage() {
     const {
         register,
         handleSubmit,
+        reset,
         formState: { errors },
     } = useForm<PreAssessmentFormData>({
         resolver: zodResolver(preAssessmentSchema),
@@ -83,6 +85,21 @@ export default function DashboardPlacementTestDetailPage() {
             experience_programming: false,
         },
     });
+
+    useEffect(() => {
+        if (test && test.education_level) {
+            let eduLevel: any = 'umum';
+            const level = test.education_level.toLowerCase();
+            if (level.includes('sd')) eduLevel = 'sd_mi';
+            else if (level.includes('smp')) eduLevel = 'smp_mts';
+            else if (level.includes('sma')) eduLevel = 'sma_ma';
+
+            reset(formValues => ({
+                ...formValues,
+                education_level: eduLevel
+            }));
+        }
+    }, [test, reset]);
 
     const onSubmit = (data: PreAssessmentFormData) => {
         startTestMutation.mutate(data);
@@ -193,8 +210,9 @@ export default function DashboardPlacementTestDetailPage() {
                             <div>
                                 <label className="block text-xs font-extrabold text-[#255d74]/60 uppercase tracking-widest mb-2">Jenjang Pendidikan</label>
                                 <select
+                                    disabled
                                     {...register('education_level')}
-                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#255d74]/20 text-[#255d74] font-bold shadow-xs appearance-none"
+                                    className="w-full px-4 py-3 bg-gray-200 border-none rounded-xl text-[#255d74]/70 font-bold appearance-none cursor-not-allowed"
                                 >
                                     <option value="sd_mi">SD/MI</option>
                                     <option value="smp_mts">SMP/MTs</option>
