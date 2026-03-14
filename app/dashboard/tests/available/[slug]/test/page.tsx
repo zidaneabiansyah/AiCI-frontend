@@ -4,7 +4,7 @@
  * Dashboard Placement Test Execution
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { placementTestApi } from '@/lib/api';
@@ -26,12 +26,15 @@ export default function DashboardTestExecutionPage() {
     const [selectedAnswer, setSelectedAnswer] = useState<string>('');
     const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
-    // Fetch test attempt data
+    // Fetch test attempt data - disable auto refetch to prevent timer reset
     const { data, isLoading, error } = useQuery({
         queryKey: ['test-attempt', attemptId],
         queryFn: () => placementTestApi.getAttempt(attemptId!),
         enabled: !!attemptId,
         refetchInterval: false,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        staleTime: Infinity, // Don't refetch automatically
     });
 
     const attempt = data?.data?.attempt;
@@ -40,12 +43,23 @@ export default function DashboardTestExecutionPage() {
     const progress = data?.data?.progress;
     const currentQuestion = questions[currentQuestionIndex];
 
-    // Timer
-    const { formatTime, getPercentage } = useTimer({
-        expiresAt: attempt?.expires_at || new Date().toISOString(),
+    // Timer - use server-provided time remaining for accuracy
+    // IMPORTANT: Only initialize timer when data is ready
+    const serverTimeRemaining = data?.data?.attempt?.time_remaining_seconds;
+    const expiresAt = attempt?.expires_at;
+    
+    // Only initialize timer when we have valid data
+    const shouldInitializeTimer = !isLoading && serverTimeRemaining !== undefined && serverTimeRemaining > 0;
+    
+    const { formatTime, getPercentage, timeRemaining } = useTimer({
+        expiresAt: expiresAt || new Date().toISOString(),
+        initialTimeRemaining: serverTimeRemaining,
+        enabled: shouldInitializeTimer,
         onExpire: () => {
             toast.error('Waktu habis! Test akan diselesaikan otomatis.');
-            completeTestMutation.mutate();
+            if (!isCompletingRef.current) {
+                completeTestMutation.mutate();
+            }
         },
     });
 
@@ -75,15 +89,25 @@ export default function DashboardTestExecutionPage() {
         },
     });
 
-    // Complete test mutation
+    // Complete test mutation - with guard to prevent double submission
+    const isCompletingRef = useRef(false);
     const completeTestMutation = useMutation({
-        mutationFn: () => placementTestApi.complete(attemptId!),
+        mutationFn: () => {
+            if (isCompletingRef.current) {
+                return Promise.reject(new Error('Already completing'));
+            }
+            isCompletingRef.current = true;
+            return placementTestApi.complete(attemptId!);
+        },
         onSuccess: () => {
             toast.success('Test selesai! Melihat hasil...');
-            router.push(`/dashboard/tests`); // In dashboard, redirect to history
+            router.push(`/dashboard/tests`);
         },
         onError: (error: any) => {
-            toast.error(error.message || 'Gagal menyelesaikan test');
+            if (error.message !== 'Already completing') {
+                toast.error(error.message || 'Gagal menyelesaikan test');
+            }
+            isCompletingRef.current = false;
         },
     });
 
@@ -153,7 +177,9 @@ export default function DashboardTestExecutionPage() {
 
                     <div className={`flex items-center gap-3 px-4 py-2 rounded-xl ${isTimeCritical ? 'bg-red-50 text-red-600' : 'bg-[#255d74]/5 text-[#255d74]'}`}>
                         <Clock className={`w-5 h-5 ${isTimeCritical ? 'animate-pulse' : ''}`} />
-                        <span className="font-bold text-lg">{formatTime()}</span>
+                        <span className="font-bold text-lg">
+                            {shouldInitializeTimer ? formatTime() : '--:--'}
+                        </span>
                     </div>
                 </div>
 

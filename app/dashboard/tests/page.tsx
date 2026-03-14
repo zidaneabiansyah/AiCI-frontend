@@ -9,11 +9,20 @@ import { formatDate, formatDuration } from '@/lib/utils/format';
 export default function DashboardTestsPage() {
     const { data, isLoading } = useQuery({
         queryKey: ['my-test-attempts'],
-        queryFn: () => placementTestApi.list(), // This should be user's attempts endpoint
+        queryFn: async () => {
+            // Get user's test attempts from backend
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/user/test-attempts`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('aici_token')}`,
+                    'Accept': 'application/json',
+                },
+            });
+            if (!response.ok) throw new Error('Failed to fetch attempts');
+            return response.json();
+        },
     });
 
-    // Mock data for now - replace with actual API call
-    const attempts: any[] = [];
+    const attempts = data?.data || [];
 
     return (
         <div>
