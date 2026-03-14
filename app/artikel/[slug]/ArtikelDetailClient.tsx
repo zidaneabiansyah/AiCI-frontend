@@ -120,9 +120,13 @@ export default function ArtikelDetailPage() {
                     </h1>
                     
                     <div className="flex items-center gap-4 text-white/60 text-sm">
-                        <span>{article.author}</span>
-                        <span>•</span>
                         <span>{formatDate(article.published_at)}</span>
+                        {article.category && (
+                            <>
+                                <span>•</span>
+                                <span className="capitalize">{article.category}</span>
+                            </>
+                        )}
                     </div>
                 </div>
             </section>
@@ -131,7 +135,7 @@ export default function ArtikelDetailPage() {
             <div className="max-w-5xl mx-auto px-6 -mt-4">
                 <div className="relative aspect-video rounded-2xl overflow-hidden shadow-xl">
                     <Image
-                        src={article.thumbnail || '/placeholder-image.jpg'}
+                        src={article.featured_image || '/placeholder-image.jpg'}
                         alt={article.title}
                         fill
                         className="object-cover"

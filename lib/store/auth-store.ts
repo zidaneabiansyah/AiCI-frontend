@@ -16,7 +16,6 @@ interface AuthState {
     setAuth: (user: User, token: string) => void;
     clearAuth: () => void;
     updateUser: (user: Partial<User>) => void;
-    setHydrated: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,8 +49,6 @@ export const useAuthStore = create<AuthState>()(
                 set((state) => ({
                     user: state.user ? { ...state.user, ...userData } : null,
                 })),
-
-            setHydrated: (value) => set({ isHydrated: value }),
         }),
         {
             name: 'aici-auth-storage',

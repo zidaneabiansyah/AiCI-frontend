@@ -57,13 +57,13 @@ function SortableFacilityCard({ facility, onEdit, onDelete }: SortableItemProps)
                 {facility.image ? (
                     <Image
                         src={facility.image}
-                        alt={facility.title}
+                        alt={facility.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-primary/20 text-4xl font-bold">
-                        {facility.title.charAt(0)}
+                        {facility.name.charAt(0)}
                     </div>
                 )}
                 {/* Drag Handle Overlay */}
@@ -82,7 +82,7 @@ function SortableFacilityCard({ facility, onEdit, onDelete }: SortableItemProps)
             {/* Content */}
             <div className="p-6">
                 <h4 className="font-bold text-primary text-lg mb-2 line-clamp-1 group-hover:text-secondary transition-colors">
-                    {facility.title}
+                    {facility.name}
                 </h4>
                 <p className="text-primary/60 text-sm leading-relaxed line-clamp-2 mb-4">
                     {facility.description}
@@ -148,7 +148,7 @@ export default function AdminFacilitiesPage() {
         loadFacilities();
     }, []);
 
-    const filteredFacilities = facilities.filter(f => f.category === activeTab);
+    const filteredFacilities = facilities.filter(f => f.type === activeTab);
 
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
@@ -161,7 +161,7 @@ export default function AdminFacilitiesPage() {
             const newOrder = arrayMove(filtered, oldIndex, newIndex);
             
             // Update local state
-            const otherFacilities = facilities.filter(f => f.category !== activeTab);
+            const otherFacilities = facilities.filter(f => f.type !== activeTab);
             setFacilities([...otherFacilities, ...newOrder]);
 
             // Save new order to backend
@@ -178,9 +178,9 @@ export default function AdminFacilitiesPage() {
     const openModal = (facility?: BackendFacility) => {
         if (facility) {
             setEditingFacility(facility);
-            setTitle(facility.title);
+            setTitle(facility.name);
             setDescription(facility.description);
-            setCategory(facility.category);
+            setCategory(facility.type as FacilityCategory);
             setImagePreview(facility.image);
         } else {
             resetForm();
@@ -262,7 +262,7 @@ export default function AdminFacilitiesPage() {
         { key: 'ROBOT', label: 'Robot', icon: '🤖' },
     ];
 
-    const getCategoryCount = (cat: FacilityCategory) => facilities.filter(f => f.category === cat).length;
+    const getCategoryCount = (cat: FacilityCategory) => facilities.filter(f => f.type === cat).length;
 
     return (
         <div className="space-y-8">

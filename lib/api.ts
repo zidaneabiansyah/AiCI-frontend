@@ -19,13 +19,18 @@ export interface BackendPartner {
 }
 
 export interface BackendFacility {
-    category_display: string;
     id: string;
-    type: 'RUANGAN' | 'MODUL' | 'MEDIA_KIT' | 'ROBOT';
     name: string;
     description: string;
+    type: string;
+    quantity?: number;
     image: string;
-    order: number;
+    icon?: string;
+    specifications?: any;
+    sort_order: number;
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface BackendTeamMember {
@@ -60,6 +65,7 @@ export interface BackendArticle {
     tags: string[] | string | null;
     status: 'draft' | 'published' | 'archived';
     published_at: string | null;
+    views_count?: number;
     created_at: string;
     updated_at: string;
 }

@@ -28,7 +28,7 @@ export default function ProfilPage() {
                 ]);
 
                 // Sort team members by order
-                const sortedTeam = (teamRes.results || []).sort((a: any, b: any) => a.order - b.order);
+                const sortedTeam = teamRes.sort((a, b) => a.order - b.order);
                 setTeamMembers(sortedTeam);
                 
                 // Set content
@@ -249,7 +249,7 @@ export default function ProfilPage() {
                                 {[...Array(3)].map((_, index) => (
                                     <div
                                         key={`skeleton-${index}`}
-                                        className="min-w-full md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-16px)] flex-shrink-0"
+                                        className="min-w-full md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-16px)] shrink-0"
                                     >
                                         {/* Image Skeleton */}
                                         <div className="relative aspect-3/4 w-full bg-gray-200 rounded-sm mb-4 animate-pulse shadow-sm border border-gray-100" />

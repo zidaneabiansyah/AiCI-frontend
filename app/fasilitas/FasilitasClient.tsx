@@ -170,7 +170,7 @@ export default function FasilitasPage({ initialFacilities }: { initialFacilities
                                 {/* Content */}
                                 <div className="lg:w-1/2 flex flex-col justify-center">
                                     <span className="text-secondary text-sm font-bold uppercase tracking-wider mb-2">
-                                        {facility.category_display || facility.type}
+                                        {facility.type?.replace('_', ' ')}
                                     </span>
                                     <h2 className="text-2xl md:text-3xl font-bold text-primary mb-4">
                                         {facility.name}
