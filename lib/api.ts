@@ -170,7 +170,16 @@ const PUBLIC_ENDPOINTS = [
     '/v1/placement-tests',
 ];
 
-function isPublicEndpoint(endpoint: string): boolean {
+function isPublicEndpoint(endpoint: string, method: string = 'GET'): boolean {
+    if (method !== 'GET') {
+        return false;
+    }
+    
+    // Explicitly exclude placement test attempt and result endpoints from being public
+    if (endpoint.startsWith('/v1/placement-tests/attempt') || endpoint.startsWith('/v1/placement-tests/result')) {
+        return false;
+    }
+    
     return PUBLIC_ENDPOINTS.some(p => endpoint.startsWith(p));
 }
 
@@ -204,10 +213,10 @@ function addRefreshSubscriber(cb: (token: string) => void) {
 }
 
 export async function fetcher<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const isPublic = isPublicEndpoint(endpoint);
+    const method = (options?.method || 'GET').toUpperCase();
+    const isPublic = isPublicEndpoint(endpoint, method);
     
     // For GET requests, use deduplication
-    const method = (options?.method || 'GET').toUpperCase();
     const shouldDedupe = method === 'GET' && !options?.body;
     
     const getHeaders = (withAuth = true) => {
@@ -333,6 +342,10 @@ export const placementTestApi = {
     }),
     complete: (attemptId: string) => fetcher<{ data: { attempt_id: string } }>(`/v1/placement-tests/attempt/${attemptId}/complete`, {
         method: 'POST',
+        body: JSON.stringify({
+            test_attempt_id: attemptId,
+            confirm: true
+        }),
     }),
     getResult: (attemptId: string) => fetcher<{ data: any }>(`/v1/placement-tests/result/${attemptId}`),
     downloadResult: (attemptId: string) => `${BASE_URL}/v1/placement-tests/result/${attemptId}/download`,
