@@ -55,7 +55,7 @@ const Hero = () => {
                         </p>
 
                         <Link
-                            href={isAuthenticated ? "/placement-test" : "/login"}
+                            href={isAuthenticated ? "/dashboard/tests/available" : "/login"}
                             className="inline-block bg-[#f03023] text-white px-8 py-3 rounded-full font-bold text-xs tracking-widest uppercase hover:bg-[#d42a1e] transition-all shadow-xl"
                         >
                             Ayo Ikut Placement Test!

@@ -84,7 +84,7 @@ export default function DashboardPage() {
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                 <Link
-                    href="/placement-test"
+                    href="/dashboard/tests/available"
                     className="bg-linear-to-br from-[#255d74] to-[#1e4a5f] rounded-2xl p-8 text-white hover:shadow-xl transition-all group"
                 >
                     <FileText className="w-12 h-12 mb-4" />
@@ -97,7 +97,7 @@ export default function DashboardPage() {
                 </Link>
 
                 <Link
-                    href="/classes"
+                    href="/dashboard/classes"
                     className="bg-linear-to-br from-secondary to-[#e63c1e] rounded-2xl p-8 text-white hover:shadow-xl transition-all group"
                 >
                     <BookOpen className="w-12 h-12 mb-4" />

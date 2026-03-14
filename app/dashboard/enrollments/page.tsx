@@ -43,7 +43,7 @@ export default function DashboardEnrollmentsPage() {
                     <h3 className="text-xl font-bold text-[#255d74] mb-2">Belum Ada Pendaftaran</h3>
                     <p className="text-[#255d74]/60 mb-6">Anda belum mendaftar kelas apapun</p>
                     <Link
-                        href="/classes"
+                        href="/dashboard/classes"
                         className="inline-block px-6 py-3 bg-[#255d74] text-white rounded-xl font-bold hover:bg-[#1e4a5f] transition-all"
                     >
                         Jelajahi Kelas
