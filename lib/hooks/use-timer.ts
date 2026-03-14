@@ -3,7 +3,7 @@
  * Countdown timer for placement tests
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseTimerOptions {
     expiresAt: string;
@@ -13,6 +13,8 @@ interface UseTimerOptions {
 export function useTimer({ expiresAt, onExpire }: UseTimerOptions) {
     const [timeRemaining, setTimeRemaining] = useState<number>(0);
     const [isExpired, setIsExpired] = useState(false);
+
+    const hasExpiredRef = useRef(false);
 
     const calculateTimeRemaining = useCallback(() => {
         const now = new Date().getTime();
@@ -26,7 +28,8 @@ export function useTimer({ expiresAt, onExpire }: UseTimerOptions) {
         const remaining = calculateTimeRemaining();
         setTimeRemaining(remaining);
 
-        if (remaining === 0) {
+        if (remaining === 0 && !hasExpiredRef.current) {
+            hasExpiredRef.current = true;
             setIsExpired(true);
             onExpire?.();
             return;
@@ -37,7 +40,8 @@ export function useTimer({ expiresAt, onExpire }: UseTimerOptions) {
             const remaining = calculateTimeRemaining();
             setTimeRemaining(remaining);
 
-            if (remaining === 0) {
+            if (remaining === 0 && !hasExpiredRef.current) {
+                hasExpiredRef.current = true;
                 setIsExpired(true);
                 onExpire?.();
                 clearInterval(interval);

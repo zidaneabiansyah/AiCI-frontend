@@ -174,6 +174,12 @@ function isPublicEndpoint(endpoint: string, method: string = 'GET'): boolean {
     if (method !== 'GET') {
         return false;
     }
+    
+    // Explicitly exclude placement test attempt and result endpoints from being public
+    if (endpoint.startsWith('/v1/placement-tests/attempt') || endpoint.startsWith('/v1/placement-tests/result')) {
+        return false;
+    }
+    
     return PUBLIC_ENDPOINTS.some(p => endpoint.startsWith(p));
 }
 
@@ -336,6 +342,10 @@ export const placementTestApi = {
     }),
     complete: (attemptId: string) => fetcher<{ data: { attempt_id: string } }>(`/v1/placement-tests/attempt/${attemptId}/complete`, {
         method: 'POST',
+        body: JSON.stringify({
+            test_attempt_id: attemptId,
+            confirm: true
+        }),
     }),
     getResult: (attemptId: string) => fetcher<{ data: any }>(`/v1/placement-tests/result/${attemptId}`),
     downloadResult: (attemptId: string) => `${BASE_URL}/v1/placement-tests/result/${attemptId}/download`,
